@@ -3,13 +3,14 @@ title: "Homework 3"
 editor: visual
 format: 
   html:
+    toc: true
+    toc-title: "Outline"
+    toc-depth: 3
     code-fold: true
     code-line-numbers: true
     code-tools: true
     embed-resources: true
 ---
-
-# Homework 3
 
 Homework 3: Due Thursday 1-30-2024 at 11:59pm\
 STAT 417: Survival Analysis Methods\
@@ -147,20 +148,24 @@ $$
 
 (a) Construct the likelihood function for $\theta$, i.e., find $L(\theta)$, simplifying as much as possible.
 
-    $$
-    L(\theta) = \prod_{1}^{10} f(t_i) \\
-    = \prod_{1}^{10} (\theta + 1)t_i^\theta \\
-    = (\theta + 1)^{10}[\prod_{1}^{10}t_i]^{\theta} \\
-    = (\theta + 1)^{10}0.0617^{\theta}
-    $$
+$$
+\begin{align*}
+L(\theta) &= \prod_{1}^{10} f(t_i) \\
+&= \prod_{1}^{10} (\theta + 1)t_i^\theta \\
+&= (\theta + 1)^{10}\left[\prod_{1}^{10}t_i\right]^{\theta} \\
+&= (\theta + 1)^{10} \cdot 0.0617^{\theta}
+\end{align*}
+$$
 
 (b) Find the maximum likelihood estimate of $\theta$ for the given times.
 
-    $$
-    l(\theta) = ln[(\theta + 1)^{10}0.0617^{\theta}] = 10ln[\theta + 1] + \theta ln[0.0617] \\
-    l'(\theta) = \frac{10}{\theta + 1} + ln[0.0617] = 0 \\
-    \hat{\theta} \approx 2.59
-    $$
+$$
+\begin{align*}
+    l(\theta) &= ln[(\theta + 1)^{10}0.0617^{\theta}] = 10ln[\theta + 1] + \theta ln[0.0617] \\
+    l'(\theta) &= \frac{10}{\theta + 1} + ln[0.0617] = 0 \\
+    \hat{\theta} &\approx 2.59
+\end{align*}
+$$
 
 ## 4. Weibull Distribution
 
@@ -168,22 +173,26 @@ Suppose a random sample $T_1, \dots, T_{10}$ is drawn from a Weibull distributio
 
 (a) Construct the likelihood function for $\lambda$, i.e., find $L(\lambda)$, simplifying as much as possible.
 
-    $$
-    L(\lambda) = \prod_{1}^{10} f(t_i) \\
-    = \prod_{1}^{10} \frac{\beta t_i^{\beta - 1}}{\lambda^\beta}exp[-(\frac{t_i}{\lambda})^\beta] \\
-    = \prod_{1}^{10} \frac{2 t_i}{\lambda^2}exp[-(\frac{t_i}{\lambda})^2] \\
-    = (\frac{2}{\lambda^2})^{10} \prod_{1}^{10}[t_i] \times exp[-\sum_1^{10}(\frac{t_i}{\lambda})^2] \\
-    = (\frac{2}{\lambda^2})^{10} \prod_{1}^{10}t_i \times exp[-\frac{1}{\lambda^2} \sum_1^{10} t_i^2]
-    $$
+$$
+\begin{align*}
+    L(\lambda) &= \prod_{1}^{10} f(t_i) \\
+    &= \prod_{1}^{10} \frac{\beta t_i^{\beta - 1}}{\lambda^\beta}exp[-(\frac{t_i}{\lambda})^\beta] \\
+    &= \prod_{1}^{10} \frac{2 t_i}{\lambda^2}exp[-(\frac{t_i}{\lambda})^2] \\
+    &= (\frac{2}{\lambda^2})^{10} \prod_{1}^{10}[t_i] \cdot exp[-\sum_1^{10}(\frac{t_i}{\lambda})^2] \\
+    &= (\frac{2}{\lambda^2})^{10} \prod_{1}^{10}t_i \cdot exp[-\frac{1}{\lambda^2} \sum_1^{10} t_i^2]
+\end{align*}
+$$
 
 (b) Find the MLE for $\lambda$.
 
-    $$
-    l(\lambda) = ln[(\frac{2}{\lambda^2})^{10} \prod_{1}^{10}[t_i] \times exp[-\frac{1}{\lambda^2} \sum_1^{10} t_i^2] \\
-    = 10ln(2) - 20ln(\lambda) + \sum_1^{10} ln(t_i) - \frac{1}{\lambda^2} \sum_1^{10} t_i^2 \\
-    l'(\lambda) = -\frac{20}{\lambda} + \frac{2}{\lambda^3} \sum_1^{10} t_i^2 = 0 \\
-    \hat{\lambda} = \sqrt{\frac{\sum_1^{10}t_i^2}{10}}
-    $$
+$$
+\begin{align*}
+    l(\lambda) &= ln[(\frac{2}{\lambda^2})^{10} \prod_{1}^{10}[t_i] \cdot exp[-\frac{1}{\lambda^2} \sum_1^{10} t_i^2] \\
+    &= 10ln(2) - 20ln(\lambda) + \sum_1^{10} ln(t_i) - \frac{1}{\lambda^2} \sum_1^{10} t_i^2 \\
+    l'(\lambda) &= -\frac{20}{\lambda} + \frac{2}{\lambda^3} \sum_1^{10} t_i^2 = 0 \\
+    \hat{\lambda} &= \sqrt{\frac{\sum_1^{10}t_i^2}{10}}
+\end{align*}
+$$
 
 ## 5. Times to Relapse
 
@@ -197,20 +206,24 @@ where the “$+$” denotes right-censored observations.
 
 (a) Construct the likelihood function for $\lambda$, simplifying as much as possible.
 
-    $$
-    L(\lambda) = \prod_{\text{complete times}} f(t_i) \times \prod_{\text{right censored times}} S(t_i) \\
-    = \prod \frac{1}{\lambda}exp[\frac{-t_i}{\lambda}] \times exp[\frac{-t_i}{\lambda}] \\
-    = \frac{1}{\lambda^8} exp[-\sum\frac{t_i}{\lambda}] \times exp[-\sum\frac{t_i}{\lambda}] \\
-    = \frac{1}{\lambda^8}exp[-\frac{226}{\lambda}]
-    $$
+$$
+\begin{align*}
+    L(\lambda) &= \prod_{\text{complete times}} f(t_i) \cdot \prod_{\text{right censored times}} S(t_i) \\
+    &= \prod \frac{1}{\lambda}exp[\frac{-t_i}{\lambda}] \cdot exp[\frac{-t_i}{\lambda}] \\
+    &= \frac{1}{\lambda^8} exp[-\sum\frac{t_i}{\lambda}] \cdot exp[-\sum\frac{t_i}{\lambda}] \\
+    &= \frac{1}{\lambda^8}exp[-\frac{226}{\lambda}]
+\end{align*}
+$$
 
 (b) Find the maximum likelihood estimate of $\lambda$ using the sample of observed survival times.
 
-    $$
-    l(\lambda) = ln[\frac{1}{\lambda^8}exp[-\frac{226}{\lambda}]] = -8ln(\lambda) - \frac{226}{\lambda} \\
-    l'(\lambda) = \frac{-8}{\lambda} + \frac{226}{\lambda^2} = 0 \\
-    \hat{\lambda} = \frac{226}{8} = 28.25
-    $$
+$$
+\begin{align*}
+    l(\lambda) &= ln[\frac{1}{\lambda^8}exp[-\frac{226}{\lambda}]] = -8ln(\lambda) - \frac{226}{\lambda} \\
+    l'(\lambda) &= \frac{-8}{\lambda} + \frac{226}{\lambda^2} = 0 \\
+    \hat{\lambda} &= \frac{226}{8} = 28.25
+\end{align*}
+$$
 
 ## 6. Kaplan-Meier Estimation
 
