@@ -1,0 +1,113 @@
+---
+title: "STAT 417: Survival Analysis Methods"
+subtitle: "Computing Assignment 4: Due Friday 1-31-2025 at 11:59pm"
+author: "Name: Andrew Kerr"
+format: html
+embed-resources: true
+---
+
+## Instructions for constructing Kaplan-Meier curves in Minitab
+
+1.  Open the Minitab data file. Note: there must be at least a time variable and a censoring status variable to construct the Kaplan-Meier curve.
+
+2.  On the top menu, follow: **Stat** $\rightarrow$ **Reliability/Survival** $\rightarrow$ **Distribution Analysis (Right Censoring)** $\rightarrow$ **Nonparametric Distribution Analysis**
+
+3.  Enter the *time* variable in the "Variables:" box.
+
+4.  *Optional*: If you want to produce several curves for different values of a grouping variable (e.g. you have the grouping variable gender and you want to examine the survival curves for males and females on the same graph), check the "By variable:" box and enter the grouping variable (e.g. gender).
+
+5.  On the right, click the "Censor..." button. Then:
+
+    -   Enter the censoring status variable in the "Use censoring column:" box by double-clicking the variable. Note: you may have to first click inside the box to view all the variables in the file.
+    -   In the "Censoring value:" box, enter the value of the indicator variable that corresponds to a censored event time (usually a value of 0 or 1). Note: in all the course files, a censoring status value of 0 will correspond to a censored event time.
+    -   Click the "OK" box.
+
+6.  On the right, click the "Graphs..." button.
+
+    -   To produce the graph of the Kaplan-Meier estimator, check the box next to "Survival plot."
+    -   To include plots of the confidence intervals for the survival probabilities, check the box "Display confidence intervals on plot." Note: this is not recommended when plotting more than one Kaplan-Meier curve.
+    -   Click the "OK" box.
+
+7.  Click "OK"
+
+8.  Estimated characteristics of the time variable are displayed in the Minitab "Session" window. Results of the log-rank and Wilcoxon tests are also displayed if comparing two or more survival curves.
+
+------------------------------------------------------------------------
+
+## 1. The Hunger Games Minitab file
+
+The Hunger Games Minitab file (in the Computing Assignment 4 folder) contains data collected from the movie *Hunger Games* (Lions Gate Films, 2012). The data consist of the survival times (in days) of 24 participants in the Hunger Games, as well as each participant’s gender (credit is given to Brett Keller for collecting the data). For those unfamiliar with the movie, here is a brief summary:
+
+*Set in a future North America known as “Panem”, the Capitol selects a boy and a girl between the ages of 12 and 18 from each of the twelve outlying districts to compete in the annual “Hunger Games”, a televised fight-to-the-death. The film is centered around Katniss Everdeen - a 16-year-old girl from District 12, who volunteers for her 12-year-old sister, Prim, when Prim’s name is chosen - and Katniss’s fellow District 12 tribute, Peeta Mellark, whom she has some rather dramatic history with. Katniss is then rushed to the Capitol, where she undergoes intense training, before being thrust into the arena to fight to become the victor of the seventy-fourth annual Hunger Games.* - Written by fallgeek.
+
+### (a) Kaplan-Meier curves by gender
+
+Use the Minitab instructions to construct the Kaplan-Meier curves for male and female participants (on the same graph). Briefly compare the survival experiences by gender.
+
+![](images/clipboard-870383939.png){fig-align="center"}
+
+In the Hunger Games, males tend to have equal or higher estimated probability of survival then females at any time t, except from days 1 to 2. Both genders have a sharp decrease in estimated probability of survival from day 0 to day 1, with a more gradual decrease for the remaining days.
+
+### (b) For the male participants, find $\hat{t}_{25}$ and interpret its value.
+
+![](images/clipboard-4248800317.png){fig-align="center"}
+
+$$
+\begin{align*}
+\hat{t}_{25} &= \text{min}(t_{(i)}:\hat{S}(t_{(i)}) \le 1 - \frac{25}{100}) \\
+&= \text{min}(t_{(i)}:\hat{S}(t_{(i)}) \le 0.75) \\
+&= 1 \text{ day}
+\end{align*}
+$$
+
+The estimated time at which 25% of the participants have died, and 75% have not, is 1 day.
+
+### (c) Examine the plot of the Kaplan-Meier curves (and/or examine the Minitab Session Window output) to determine whether males or females appear to have any advantage in the Hunger Games. Report the values of two descriptive statistics that can be used to support your answer (examine the plot of the Kaplan-Meier curves or examine the Minitab Session Window output to find the values).
+
+Based on the Minitab output, male contestants have a slight advantage in the games. The mean survival time for females is approximately 6 days, while for males it is approximately 6.8 days, which show that male participants tend to survive longer.
+
+------------------------------------------------------------------------
+
+## 2. Rearrest Data
+
+Recall the rearrest data: Henning and Frueh (1996) followed criminal activities of 194 inmates released from a medium security prison for 36 months. We can use the data from this study to investigate the time until the former inmates were re-arrested. If the former inmate had been re-arrested for a criminal act before 36 months (after initial prison release) had passed, then that former inmate’s event time was complete. If the former inmate had not been re-arrested for a criminal act after 36 months had passed, or had completely dropped out of the study, then that former inmate’s event time was right censored.
+
+Measurements on the following variables are available in the Minitab file **Rearrest** (also located in the **Computing Assignment 4** folder):
+
+-   **months**: months until re-arrest
+-   **censor**: censoring status indicator variable (0 = censored event time)
+-   **personal**: a dichotomous variable identifying former inmates who had a history of person-related crimes (**personal**=1), i.e. those with one or more convictions for offenses such as aggravated assault or kidnapping.
+-   **property**: a dichotomous variable indicating whether former inmates were convicted of a property-related crime (**property**=1)
+-   **cenage**: the "centered" age of individual, i.e. the difference between the age of the individual upon release and the average age of all inmates in the study.
+
+### (a) Kaplan-Meier curves by personal crime history
+
+Use the Minitab instructions to construct the Kaplan-Meier curves for former inmates who did and did not commit person-related crimes (on the same graph). Briefly compare the (estimated) survival experiences for the two types of inmates. What do the survival curves suggest about former inmates who had committed person-related crimes versus former inmates who did not commit person-related crimes?
+
+![](images/clipboard-2288194974.png){fig-align="center"}
+
+The estimated survival of inmates who committed person-related crimes is lower then inmates who did not commit person-related crimes for all times t. It is estimated that all inmates who committed person-related crimes were arrested by the end of the study, meanwhile it is estimated that roughly 38% of inmates who did not commit person-related crimes were not re-arrested by the end of the study.
+
+### (b) Estimated mean time to re-arrest
+
+Scroll up through the Minitab Session Window to report the estimated **mean** time to be re-arrested for both groups of former inmates (there will be separate analyses for **personal**=0 and **personal**=1). Verify that these results are consistent with your answer in part (a).
+
+person-related: 15.1462 months
+
+not person-related: 20.2511 months
+
+Since the estimated mean time to re-arrest for non person-related crimes is higher then it is for person-related crimes, the estimated means support my answer in part (a)!
+
+### (c) Kaplan-Meier estimate for 25 months
+
+Scroll up through the Minitab Session Window and report the Kaplan-Meier estimate of the probability that a former inmate who committed a person-related crime will take longer than 25 months to be rearrested. Also estimate the chance that a former inmate who has not committed a person-related crime will take longer than 25 months to be rearrested.
+
+$\hat{S}_{\text{person}}(25) = 0.265972$
+
+$\hat{S}_{\text{not person}}(25) = 0.420313$
+
+### (d) Third quartile of survival time
+
+Briefly explain why the (estimated) third quartile of survival time does not exist for former inmates who did not commit a person-related crime.
+
+The estimated third quartile of survival time does not exist for former inmates who did not commit a person-related crime because our largest time includes at least 1 right censored time. Therefore, we do not know what the largest time for this set of observations are, and cannot calculate the third quartile.
