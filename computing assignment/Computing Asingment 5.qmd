@@ -37,25 +37,38 @@ censor <- c(1,1,1,1,0,0,0)
 KM.obj <- survfit(Surv(time,censor)~1, conf.type="none")
 ```
 
-**Tasks:**
+-   Note: The conf.type="none" option will suppress computation of confidence intervals for the survival probabilities. Otherwise, confidence intervals will show up on your plots.
 
-1.  Compute the Kaplan-Meier estimates of survival for each complete event time.
+-   There are several options that can be specified within the survfit command above. Read the documentation for survfit in the help file for more information.
+
+-   Typing summary(KM.obj) will give you select quantities related to computing the Kaplan-Meier estimates, as well as standard errors of the estimated probabilities, and the confidence limits (if requested) for the true survival probabilities.
+
+#### (a) Follow the code provided above to compute the Kaplan-Meier estimates of survival for each complete event time. Report the estimated survival probabilities for the complete event times.
 
 ```{r}
 summary(KM.obj)
 ```
 
-2.  Estimate the probability that a dryer will last longer than 6 years.
+#### (b) Estimate the probability that a drier will last longer than 6 years.
 
 $S(6) = P(t>6) = 0.857$
 
-3.  Estimate the median time until a dryer fails.
+#### (c) Estimate the median time until a drier fails.
 
-## $t_{.5} = 9$ years
+$t_{.5} = 9$ years
 
 ### **2. Ovarian Cancer Survival Analysis**
 
-The dataset `ovarian` (available in the `survival` package) contains follow-up times (in days) for ovarian cancer patients.
+The data set `ovarian` is available for analysis in the `survival` package. Follow these preliminary steps:
+
+-   Read the description of the data set by typing `help(ovarian)`. Note that the observed event times\
+    are contained in the variable `futime` (follow-up time measured in days from administration of treat-\
+    ment until death), and the censoring status variable, fustat, takes value 0 for censored event times.\
+    Construct the Kaplan-Meier estimator of the survival function for the time until death from ovarian\
+    cancer.\
+    `KM.obj <- survfit(Surv(futime,fustat)~1, data=ovarian, conf.typ="plain")`
+
+Apply the `summary` and plot commands to **KM.obj** to answer the following questions:
 
 ```{r}
 # Load and analyze ovarian cancer survival data
@@ -64,17 +77,15 @@ summary(KM.obj)
 plot(KM.obj)
 ```
 
-**Tasks:**
-
-1.  Estimate the proportion of ovarian cancer patients who survived longer than 275 days.
+#### (a) Estimate the proportion of ovarian cancer patients in the study who survived longer than 275 days after treatment.
 
 $S(275) = 0.846$
 
-2.  Find and report the 95% confidence interval for the probability that a randomly selected patient survives longer than 275 days.
+#### (b) Using the summary() command, find and report the 95% confidence interval for the probability that a randomly selected ovarian cancer patient survives longer than 275 days. Interpret the interval.
 
 The 95% confidence interval for S(275) is (0.707, 0.985). We are 95% confident that the true probability that a randomly selected ovarian cancer patient survives beyond 275 days is between .707 and .985.
 
-3.  Modify the Kaplan-Meier estimator by setting `conf.type = "log-log"` and report the new confidence interval.
+#### (c) In the code for constructing the Kaplan-Meier estimator provided above, substitute conf.type = "plain" with conf.type = "log-log" to obtain the confidence intervals for the true survival probabilities based on the ln(− ln S(t)) approach. Find and report the 95% confidence interval for the probability that a randomly selected ovarian cancer patient survives longer than 275 days.
 
 ```{r}
 KM.obj <- survfit(Surv(futime, fustat)~1, data=ovarian, conf.type="log-log")
@@ -83,17 +94,28 @@ summary(KM.obj)
 
 The new 95% confidence interval for S(275) is (0.640, 0.939).
 
-4.  Estimate the probability that a patient survives beyond 563 days.
+#### (d) Estimate the probability that a randomly selected ovarian cancer patient survives beyond 563 days.
 
 $S(563) = 0.546$
 
-5.  Discuss why the Kaplan-Meier curve does not reach 0 and what this implies about the treatment administered.
+#### (e) Note that the Kaplan-Meier curve does not reach 0 (nor does it come close). What does this imply about the treatment that was administered to the ovarian cancer patients?
 
 ------------------------------------------------------------------------
 
 ### **3. Halibut Survival Study**
 
-The dataset `Halibut` contains survival times (in hours) of 294 Atlantic halibut caught for an experiment on size regulation. The variable `TIME` represents survival time, and `CENSOR` is the censoring indicator (1 = complete event time, 0 = censored).
+The data set Halibut located in the Canvas folder **Computing Assignment 5** contains measurements on\
+294 Atlantic halibut caught for an experiment on size regulation. The variable **TIME** contains the survival\
+time of halibut (time until death) in hours (measured from time of capture), and **CENSOR** is the censoring\
+indicator taking value 1 for complete event times. Save this data file to the desk top.
+
+-   Import the Halibut data set into your R session.
+
+-   Construct the Kaplan-Meier estimator using the following syntax:
+
+    `KM.obj <- survfit(Surv(TIME,CENSOR)~1, data=halibut, conf.type="log-log")`
+
+-   Apply the `summary` and `plot` commands to **KM.obj**, answer the following questions:
 
 ```{r}
 # Load and analyze halibut survival data
@@ -102,15 +124,13 @@ summary(KM.obj)
 plot(KM.obj)
 ```
 
-**Tasks:**
+#### (a) Briefly comment on the survival experience of the halibut in this study.
 
-1\. Comment on the survival experience of the halibut.
+####  (b) Estimate the proportion of halibut that survive beyond 20 hours.
 
-2\. Estimate the proportion of halibut that survive beyond 20 hours.
+#### (c) Find and report the 95% confidence interval (standard form) for the probability that a randomly selected halibut will survive longer than 20 hours.
 
-3\. Find and report the 95% confidence interval for survival beyond 20 hours.
-
-4\. Report the estimated median halibut survival time and its 95% confidence interval.
+####  (d) Use the print() command to find the estimated median halibut survival time, and the associated 95% confidence interval for the population median halibut survival time. Provide a brief interpretation of the interval. 
 
 ------------------------------------------------------------------------
 
@@ -119,12 +139,14 @@ plot(KM.obj)
 1.  Open R Studio and load the `survival` package:
 
 ```{r}
+#| eval: false
 library(survival)
 ```
 
 2.  If entering data manually, create vectors for event times and censoring status:
 
 ```{r}
+#| eval: false
 TIME <- c(...)  # Observed event times
 CENSOR <- c(...)  # Censoring indicators
 KM.obj <- survfit(Surv(TIME, CENSOR)~1)
@@ -133,23 +155,27 @@ KM.obj <- survfit(Surv(TIME, CENSOR)~1)
 3.  If loading a dataset:
 
 ```{r}
+#| eval: false
 KM.obj <- survfit(Surv(TIME, CENSOR)~1, data=DATAFILE)
 ```
 
 4.  View summary statistics:
 
 ```{r}
+#| eval: false
 summary(KM.obj)
 ```
 
 5.  Plot the Kaplan-Meier curve:
 
 ```{r}
+#| eval: false
 plot(KM.obj)
 ```
 
 6.  To compare groups:
 
 ```{r}
+#| eval: false
 KM.obj <- survfit(Surv(TIME, CENSOR)~GROUP, data=DATAFILE)
 ```
