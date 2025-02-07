@@ -25,8 +25,10 @@ Suppose a sample of 7 dryers is selected and the times until failure (in years) 
 where **“+”** indicates that the event time was right censored. Once you are in the R Studio environment, perform the following steps:
 
 ```{r}
+#| message: false
 # Load the survival package
 library(survival)
+library(tidyverse)
 
 # Create vectors for event times and censoring status
 
@@ -51,11 +53,11 @@ summary(KM.obj)
 
 #### (b) Estimate the probability that a drier will last longer than 6 years.
 
-$S(6) = P(t>6) = 0.857$
+$\hat{S}(6) = P(t>6) = 0.857$
 
 #### (c) Estimate the median time until a drier fails.
 
-$t_{.5} = 9$ years
+$\hat{t}_{.5} = 9$
 
 ### **2. Ovarian Cancer Survival Analysis**
 
@@ -79,11 +81,13 @@ plot(KM.obj)
 
 #### (a) Estimate the proportion of ovarian cancer patients in the study who survived longer than 275 days after treatment.
 
-$S(275) = 0.846$
+$\hat{S}(275) = 0.846$
 
 #### (b) Using the summary() command, find and report the 95% confidence interval for the probability that a randomly selected ovarian cancer patient survives longer than 275 days. Interpret the interval.
 
-The 95% confidence interval for S(275) is (0.707, 0.985). We are 95% confident that the true probability that a randomly selected ovarian cancer patient survives beyond 275 days is between .707 and .985.
+CI = (0.707, 0.985)
+
+We are 95% confident that the true probability that a randomly selected ovarian cancer patient survives beyond 275 days is between .707 and .985.
 
 #### (c) In the code for constructing the Kaplan-Meier estimator provided above, substitute conf.type = "plain" with conf.type = "log-log" to obtain the confidence intervals for the true survival probabilities based on the ln(− ln S(t)) approach. Find and report the 95% confidence interval for the probability that a randomly selected ovarian cancer patient survives longer than 275 days.
 
@@ -92,13 +96,15 @@ KM.obj <- survfit(Surv(futime, fustat)~1, data=ovarian, conf.type="log-log")
 summary(KM.obj)
 ```
 
-The new 95% confidence interval for S(275) is (0.640, 0.939).
+CI = (0.640, 0.939).
 
 #### (d) Estimate the probability that a randomly selected ovarian cancer patient survives beyond 563 days.
 
-$S(563) = 0.546$
+$\hat{S}(563) = 0.546$
 
 #### (e) Note that the Kaplan-Meier curve does not reach 0 (nor does it come close). What does this imply about the treatment that was administered to the ovarian cancer patients?
+
+This implies that roughly 50% (thats where the curve appears to end at) of patients are still alive at the end of the study, indicating that the treatment may be effective to the ovarian cancer patients.
 
 ------------------------------------------------------------------------
 
@@ -118,19 +124,38 @@ indicator taking value 1 for complete event times. Save this data file to the de
 -   Apply the `summary` and `plot` commands to **KM.obj**, answer the following questions:
 
 ```{r}
+#| message: false
 # Load and analyze halibut survival data
+halibut <- read_table(here::here("data", "Halibut.txt"))
 KM.obj <- survfit(Surv(TIME, CENSOR)~1, data=halibut, conf.type="log-log")
+KM.obj$
 summary(KM.obj)
 plot(KM.obj)
 ```
 
 #### (a) Briefly comment on the survival experience of the halibut in this study.
 
-####  (b) Estimate the proportion of halibut that survive beyond 20 hours.
+The survival probability of the halibut in this study sharply decreases in the first 50 days, then slowly decreases until day 200 where it begins to level out to a constant survival probability close to 0.
 
-#### (c) Find and report the 95% confidence interval (standard form) for the probability that a randomly selected halibut will survive longer than 20 hours.
+#### (b) Estimate the proportion of halibut that survive beyond 20 hours.
 
-####  (d) Use the print() command to find the estimated median halibut survival time, and the associated 95% confidence interval for the population median halibut survival time. Provide a brief interpretation of the interval. 
+$\hat{S}(20) = 0.6440$
+
+**(c) Find and report the 95% confidence interval (standard form) for the probability that a randomly selected halibut will survive longer than 20 hours.**
+
+CI = (0.58615, 0.6959)
+
+#### (d) Use the print() command to find the estimated median halibut survival time, and the associated 95% confidence interval for the population median halibut survival time. Provide a brief interpretation of the interval.
+
+```{r}
+KM.obj
+```
+
+median = 29.8 days
+
+CI = (26.5, 35.8)
+
+We are 95% confident that the true median survival time of a randomly selected halibut is between 26.5 days and 35.8 days.
 
 ------------------------------------------------------------------------
 
