@@ -1,7 +1,7 @@
 ---
 title: "Computing Assignment 5"
 author: "Andrew Kerr"
-format: pdf
+format: html
 editor: visual
 embed-resources: true
 ---
@@ -128,7 +128,6 @@ indicator taking value 1 for complete event times. Save this data file to the de
 # Load and analyze halibut survival data
 halibut <- read_table(here::here("data", "Halibut.txt"))
 KM.obj <- survfit(Surv(TIME, CENSOR)~1, data=halibut, conf.type="log-log")
-KM.obj$
 summary(KM.obj)
 plot(KM.obj)
 ```

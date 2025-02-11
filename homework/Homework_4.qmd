@@ -1,0 +1,411 @@
+---
+title: "Homework 4: Due Wednesday, February 12, 2025 at 11:59pm"
+subtitle: "STAT 417: Survival Analysis Methods"
+author: "Andrew Kerr"
+format: html
+editor: visual
+embed-resources: true
+---
+
+## Notes:
+
+-   Problem 3 will require the use of the R software in the R Studio environment.
+
+-   If you are not familiar with the R software, please read through the document **Using R and R Studio for Survival Analysis** in the Week 5 module for a brief introduction to R and the R Studio environment.
+
+-   When asked to construct the estimated hazard or estimated cumulative hazard plots in R, be sure to "activate/source" the `plot.haz` and `plot.chaz` functions before using them. These functions are also located in the Week 5 module.
+
+```{r}
+#| include: false
+#| message: false
+
+library(tidyverse)
+library(survival)
+library(here)
+source(here("functions", "plot.chaz.R"))
+source(here("functions", "plot.haz.R"))
+```
+
+------------------------------------------------------------------------
+
+## Problem 1
+
+The following Kaplan-Meier curve displays the estimated survival probabilities of death due to brain cancer where time (from diagnosis) until death is measured in months:
+
+(a) Is the largest event time censored or complete? How do you know?
+
+    The largest event time is complete because we end with a survival probability = 0 at the end of the study, which means that all subjects have experienced the event by the end of the study.
+
+(b) Use the curve (displayed on the next page) to estimate the mean time until death due to brain cancer. Show a reasonable amount of work that leads you to your answer.
+
+![](images/clipboard-1281545072.png){fig-align="center"}
+
+$$
+\begin{align*}
+\hat{\mu} &= \sum_{i=0}^{m-1} \hat{S}(t_{(i)})[t_{(i+1)} - t_{(i)}] \\
+&= 136.53 \text{ months}
+\end{align*}
+$$
+
+```{r}
+S_hat <- c(1, 0.85, 0.68, 0.43, 0.21, 0)
+t_i <- c(0, 10, 47, 110, 147, 320)
+
+sum(S_hat * (lead(t_i) - t_i), na.rm = T)
+```
+
+------------------------------------------------------------------------
+
+## Problem 2
+
+Recall the problem on Midterm 1 regarding acute myelogenous leukemia (AML). A clinical trial to evaluate the efficacy of maintenance chemotherapy for AML was conducted at Stanford University. After reaching a status of remission through treatment by chemotherapy, the patients who entered the study were randomly assigned to two groups: the first group received maintenance chemotherapy; the second group did not. The objective of the study was to investigate whether maintenance chemotherapy prolonged time until relapse (measured in weeks from the time of randomization to the two groups). The following measurements are the times until relapse, with a “+” to indicate right censored values.
+
+`9 13 13[+] 18 23 28[+] 31 34[+] 45 48[+]`
+
+Solve the following problems (by hand) based on the observed event times. Note: you can organize the results for parts (a) and (b) into a table.
+
+(a) Find the estimated Nelson-Aalen and Kaplan-Meier type estimates of hazard for the complete event times.
+
+    See part (b).
+
+(b) Find the estimated Nelson-Aalen type estimates of cumulative hazard for the complete event times.
+
+| i | Time Interval | $n_i$ | $d_i$ | $\hat{p}_i$ | $\hat{S}(t)$ | $\tilde{h}(t) = \frac{d_i}{n_i}$ | $\hat{h}(t) = \frac{\frac{d_i}{n_i}}{t_{(i + 1)} - t_{(i)}}$ | $\tilde{H}(t) = \sum_{t_{(i)} \le t}\tilde{h}(t_{(i)})$ |
+|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|
+| 0 | \[0, 9) | 10 | 0 | 1 | 1 | 0 | 0 | 0 |
+| 1 | \[9, 13) | 10 | 1 | 9/10 = 0.9 | 0.9 | 1/10 = 0.1 | 0.1 / (13 - 9) = 0.025 | 0.1 |
+| 2 | \[13, 18) | 9 | 1 | 8/9 = 0.889 | 0.8 | 1/9 = 0.111 | 0.111 / (18 - 13) = 0.022 | 0.211 |
+| 3 | \[18, 23) | 7 | 1 | 6/7 = 0857 | 0.686 | 1/7 = 0.143 | 0.143 / (23 - 18) = 0.029 | 0.354 |
+| 4 | \[23, 31) | 6 | 1 | 5/6 = 0.833 | 0.571 | 1/6 = 0.157 | 0.157 / (31 - 23) = 0.020 | 0.521 |
+| 5 | \[31, 45) | 4 | 1 | 3/4 = 0.74 | 0.429 | 1/4 = 0.25 | 0.25 / (45 - 31) = 0.018 | 0.771 |
+| 6 | \[45, 45\] | 2 | 1 | 1/2 = 0.5 | 0.214 | 1/2 = 0.5 | 0.018 | 1.271 |
+
+(c) Interpret $\tilde{h}(t_{(3)})$ and $\hat{h}(t_{(3)})$ in the context of the problem.
+
+    $\tilde{h}(t_{(3)})$: For a randomly selected patient, the estimated probability of relapsing at 18 weeks is 0.029, given that the patient has not relapsed by 18 weeks.
+
+    $\hat{h}(t_{(3)})$: For a randomly selected patient, the estimated rate of relapsing at 18 weeks is 0.143 per week, given that the patient has not relapsed by 18 weeks.
+
+(d) Using Greenwood's Formula, compute the standard error for the estimate of the probability that a patient receiving maintenance chemotherapy will take at least 15 weeks to relapse.
+
+    $$
+    \begin{align*}
+    \widehat{V}[\hat{S}(15)] &= [\hat{S}(15)]^2\sum_{t_{(i)} \le 15} \frac{d_i}{n_i(n_i - d_i)} \\
+    &= (0.8)^2 \times [\frac{1}{9(9 - 1)} + \frac{1}{10(10 - 1)}] \\
+    &= 0.016 \\
+    SE[\hat{S}(15)] &= \sqrt{\widehat{V}[\hat{S}(15)]} \\
+    &= 0.126
+    \end{align*}
+    $$
+
+(e) Using the "standard form" of the confidence interval for $S(t)$, compute **and interpret** a 95% confidence interval for the true probability that a patient receiving maintenance chemotherapy will take at least 15 weeks to relapse. Note that the critical value is 1.96.
+
+    $$
+    \begin{align*}
+    CI &= \hat{S}(15) \pm z^*SE[\hat{S}(15)] \\
+    &= 0.8 \pm 1.96 \times 0.126 \\
+    &= (0.674, 0.926)
+    \end{align*}
+    $$
+
+    We are 95% confident that the true probability that a patient takes at least 15 weeks to relapse is between 0.674 and 0.926.
+
+(f) Suppose a doctor claims that more than 50% of the population of all patients with AML receiving maintenance chemotherapy will not have experienced a relapse through 15 weeks of treatment. Based on your above answer in part (e), is there sufficient evidence to support the doctor's claim? Briefly explain.
+
+    Yes, my answer from part (e) supports this doctors claim because 0.5 is not within my 95% confidence interval. Since all values captured in my interval are greater than 0.5, we have evidence that over half of the patients are likely not to relapse before 15 weeks.
+
+(g) Using the "log-log" expression, recompute the 95% confidence interval for the true probability that a patient receiving maintenance chemotherapy will take at least 15 weeks to relapse. How does the interval compare to that found in part (e)?
+
+    $$
+    \begin{align*}
+    \hat{L}(15) &= ln[-ln(\hat{S}(15))] = -1.500 \\ \\
+    \widehat{V}[\hat{L}(15)] &= \frac{1}{ln[\hat{S}(15)]^2}\sum_{t_{(i)} \le 15} \\
+    &= \frac{1}{ln[0.8]^2} \times [\frac{1}{9(9 - 1)} + \frac{1}{10(10 - 1)}] \\
+    &= 0.502 \\
+    SE[\hat{L}(15)] &= \sqrt{\widehat{V}[\hat{L}(15)]} \\
+    &= 0.709 \\ \\
+    C_L &= \hat{L}(15) - 1.96 \times 0.709 = -2.889 \\
+    C_U &= \hat{L}(15) + 1.96 \times 0.709 = -0.111 \\ \\
+    LL &= exp[-exp(C_U)] = 0.409 \\
+    UL &= exp[-exp(C_U)] = 0.946
+    \end{align*}
+    $$
+
+    This interval is much wider, encompassing a larger lower range of values compared to the standard form confidence interval. This interval would not support the doctors claim from (f) since 0.5 (and lower values) is in the interval.
+
+------------------------------------------------------------------------
+
+## Problem 3
+
+The **Rearrest.txt** data file (located in the **Homework 4** folder) contains the measurements on the following variables:
+
+-   **months**: time (in months) from prison release to re-arrest
+-   **censor**: the censoring status indicator variable
+-   **personal**: a dichotomous variable identifying former inmates who had a history of person-related crimes (**personal=1**), i.e. those with one or more convictions for offenses such as aggravated assault or kidnapping.
+-   **property**: a dichotomous variable indicating if former inmates were convicted of a property-related crime (**property=1**)
+-   **cage**: the "centered" age of individual, i.e. the difference between the age of the individual upon release and the average age of all inmates in the study.
+
+Use the file **rearrest** to answer the following questions using the R software (in the R studio environment):
+
+(a) Plot the estimated hazard function (Kaplan-Meier type) for all the time-to-event data. See **Example 4** in the **Using R and R Studio for Survival Analysis** document for more guidance if necessary. Include the graph in your assignment. You can copy and paste R graphs into Word documents. What general characteristic do you observe about the estimated hazard function? (Don't worry about providing an explicit interpretation, I just want you to get an overall impression of the estimated curve and report what you observe.) Use the syntax:
+
+```         
+KM.obj <- survfit(Surv(months,censor)~1, data=rearrest)
+plot.haz(KM.obj)
+```
+
+```{r}
+#| meassage: false
+
+rearrest <- read_table(here("data", "Rearrest.txt"))
+
+KM.obj <- survfit(Surv(months,censor)~1, data=rearrest)
+invisible(plot.haz(KM.obj))
+```
+
+The estimated hazard function has multiple spikes, with groups of spikes being around 0 - 3 months, 13 - 15 months, and 26 months This suggests that given an inmate has not been rearrested by these months, there is a high risk of rearrest in these months.
+
+(b) Plot and examine the Nelson-Aalen estimator of the cumulative hazard function (include this graph in your assignment). Discuss the changes in the rate of increase of $\hat{H}(t)$ as each of the following time periods pass:
+
+-   0-8 months
+-   8-15 months
+-   15-25 months
+-   25 months
+
+and discuss corresponding changes in estimated hazard as former inmates move from one time interval to another. Use the syntax:
+
+`plot.chaz(KM.obj)`
+
+```{r}
+invisible(plot.chaz(KM.obj))
+```
+
+-   0-8 months: Estimated hazard risk of rearrest is constant, then decreasing towards the end, conditional of not being rearrested by time t.
+-   8-15 months: Estimated hazard risk of rearrest is increasing, conditional of not being rearrested by time t.
+-   15-25 months: Estimated hazard risk of rearrest is decreasing, conditional of not being rearrested by time t.
+-   25 months: Estimated hazard risk of rearrest is increasing, conditional of not being rearrested by time t.
+
+(c) Investigate the “survival” experiences of former inmates who did and did not commit person-related crimes by plotting the Kaplan-Meier curves for the two samples of former inmates (include this graph in your assignment). Use the syntax:
+
+```         
+KM.obj <- survfit(Surv(months,censor)~personal, data=rearrest)
+plot(KM.obj,1ty=1:2)
+legend(2,.2,c("Personal = 0","Personal = 1"),1ty=1:2)
+```
+
+What do the Kaplan-Meier curves suggest about the time until re-arrest for the two samples of inmates? Does there appear to be an observed difference in the “survival” experiences of the two samples?
+
+```{r}
+KM.obj <- survfit(Surv(months,censor)~personal, data=rearrest)
+plot(KM.obj,lty=1:2)
+legend(2,.3,c("Personal = 0","Personal = 1"),lty=1:2)
+```
+
+Across both person and non-person related crimes, the survival probability decreases gradually from month 0 to 20, then is fairly constant. The survival probability for person crimes is higher than that for non-person crimes for all times t, suggesting that inmates who committed non-person-related crimes have a greater probability of rearrest for all times t.
+
+(d) Now suppose we are going to use the samples to compare the survival experiences of the population of former inmates who did and did not commit person-related crimes. State the null and alternative hypotheses in symbols and words for comparing the survival experiences for the two appropriate populations.
+
+-   $H_o: S_P(t) = S_{NP}(t) \text{ for all t}$
+
+    -   The probability of rearrest past month t is the same for inmates who committed person and non-person related crimes.
+
+-   $H_A: S_P(t) \ne S_{NP}(t) \text{ for some t}$
+
+    -   The probability of rearrest past month t differs for at least one month for inmates who committed person and non-person related crimes.
+
+------------------------------------------------------------------------
+
+## Problem 4
+
+Read the article (located in the **Homework 4** folder) entitled “Association Between Time Interval to Publication and Statistical Significance” by Dickersin et al. and answer the following questions:
+
+(a) Describe the time-to-event variable, the time metric, and the beginning of time.
+
+    T = Time to publication of manuscript
+
+    time metric: months
+
+    beginning of time: article submission to JAMA
+
+(b) In the context of the study, describe what it means to “survive” beyond time $t$.
+
+    For a manuscript to still be in editing/peer review phase, submitted but not yet published.
+
+(c) Describe the two primary populations in the study that were compared on the basis of “survival.”
+
+    positive results: manuscripts where the primary outcome was reported as statistically significant
+
+    negative results: manuscripts where the primary outcome was reported as not statistically significant
+
+(d) Report the estimated median “survival” time for the two populations.
+
+    positive: 7.8 months
+
+    negative: 7.6 months
+
+(e) In the context of the study, what conclusion was reached by the authors in terms of “survival” of the two populations?
+
+    That time to publication was not associated with whether the publication was reporting a statistically significant finding or not.
+
+------------------------------------------------------------------------
+
+## Problem 5
+
+Read the article (located in the **Homework 4** folder) entitled “Treatment of Complicated Grief: A Randomized Controlled Trial” by Shear et al. and answer the following questions (Note: you may be unfamiliar with some of the methodology used in some sections of the paper):
+
+(a) Carefully describe the time-to-event variable used in the survival analysis portion of the study (see page 2605), the time metric, and the beginning of time.
+
+    T = Time until there was an improvement (decrease) in the Inventory of Complicated Grief score by 20 points or more
+
+    time metric: weeks
+
+    beginning of time: First therapy session
+
+(b) In the context of the study, describe what it means to “survive” beyond time $t$.
+
+    To have not improved their Inventory of Complicated Grief score by 20 points or more.
+
+(c) Describe the two primary populations in the study that were compared on the basis of “survival.”
+
+    Interpersonal psychotherapy: framework based on previous research
+
+    Complicated Grief Treatment: developed treatment by the authors
+
+(d) Which test was used to compare the survival experiences? Cite the value of the test statistic and the corresponding $p$-value.
+
+    Wilcoxon chi-squared tets were used:
+
+    test statistic: 5.65
+
+    p-value: 0.02
+
+(e) In the context of the study, what conclusion did the authors reach in terms of “survival” of the two populations?
+
+    They concluded that their treatment, Complicated Grief Treatment, is an improvement over interpersonal psychotherapy, with faster time to response using CGT.
+
+------------------------------------------------------------------------
+
+## Problem 6
+
+In Winter 2020, students participated in an activity that compared the chip melting experiences between two types of chocolate chips: semi-sweet and dark chocolate. The times it took for the two types to “completely melt” in student’s mouths were recorded. Students were randomly assigned to either the semi-sweet or dark chocolate group and the times to melt were recorded. The study ended at 75 seconds. To keep notation consistent: Group 1 refers to the **semi-sweet chocolate** group, and Group 2 refers to the **dark chocolate** group. We are interested in comparing the “survival” experiences in the populations of semi-sweet chocolate and dark chocolate chips. The chip melting times that were recorded are shown below. You’ll need these to answer parts (b) and (c) of Problem 1. Censored times are denoted with a “+” to the right of it:
+
+|                      |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |
+|----------|----|----|----|----|----|----|-----|-----|----|----|----|----|----|----|----|----|-----|
+| Semi-Sweet (Group 1) | 32  | 42  | 44  | 45  | 49  | 49  | 51  | 54  | 55  | 76  | 74  | 75+ | 75+ | 75+ | 75+ |     |     |
+| Dark (Group 2)       | 38  | 49  | 53  | 59  | 64  | 72  | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ |
+
+(a) State the appropriate null and alternative hypotheses in symbols and words for comparing the survival experiences for the two appropriate populations.
+
+    -   $H_o: S_{SS}(t) = S_{D}(t) \text{ for all t}$
+
+        -   The probability of completely melting past t seconds is the same for students with semi-sweet chocolate chips and dark chocolate chips.
+
+    -   $H_A: S_{SS}(t) \ne S_{D}(t) \text{ for some t}$
+
+        -   The probability of completely melting past t seconds differs for at least one second for students with semi-sweet chocolate chips and dark chocolate chips.
+
+(b) The partially complete table below consists of quantities required to compute the log-rank statistic is shown below. Complete the first four rows of the table.
+
+    | i | $t_{(i)}$ | Interval | $n_i$ | $d_i$ | $d_i / n_i$ | $n_{1i}$ | $d_{1i}$ | $n_{2i}$ | $E_{1i}$ | $V_{1i}$ |
+    |:-----:|:-----:|:------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+    | 1 | 32 | \[32, 38) | 32 | 1 | 1/32 | 15 | 1 | 17 | .469 | .249 |
+    | 2 | 38 | \[38, 42) | 31 | 1 | 1/31 | 14 | 0 | 17 | .452 | .248 |
+    | 3 | 42 | \[42, 44) | 30 | 1 | 1/30 | 14 | 1 | 16 | .467 | .249 |
+    | 4 | 44 | \[44, 45) | 29 | 1 | 1/29 | 13 | 1 | 16 | .448 | .247 |
+
+    ![](images/clipboard-870978799.png)
+
+(c) From those quantities, calculate the log-rank test statistic. Show your work, but you can verify your answers using Minitab in the next part of the problem.
+
+    $X_L^2 = \frac{(11 - 6.331)^2}{3.849} = 5.664$
+
+(d) Appropriately enter the raw data (based on the samples of event times provided) into a Minitab worksheet and carry out the log-rank test (see the instructions at the end of the assignment). Be sure to report the $p$-value, make a decision at the .05 level, and state a conclusion in the context of the problem.
+
+    p-value: 0.018
+
+    Reject $H_o$. At the 0.05 level of significance, we have sufficient evidence to conclude that the probability of completely melting the chocolate chip beyond time t differs between Semi-Sweet and Dark Chocolate Chips for some time t.
+
+------------------------------------------------------------------------
+
+## Problem 7
+
+The text file **Veteran** (located in the **Homework 4** folder) contains the survival times of lung cancer patients after administration of two different treatments, as well as measurements on several other variables including the cancer cell type (**celltype**). In lecture we examined the differences in the survival rates by cell type for the standard treatment group. Now examine the differences in survival rates by cell type for all patients.
+
+(a) Briefly describe the populations of interest in the study.
+
+    We have people with four different types of lung cancers, determined by the type of cell the cancer is in: squamous, smallcell, adeno, and large.
+
+(b) State the null and alternative hypotheses (in words and symbols) for comparing the survival experiences for the populations described in part (a).
+
+    -   $H_o: S_{1}(t) = S_{2}(t) = S_{3}(t) = S_{4}(t)\text{ for all t}$
+
+        -   The probability of surviving lung cancer t days past treatment is the same for all lung cancer types.
+
+    -   $H_A: S_{i}(t) \ne S_{j}(t) \text{ for some t}; i \ne j; i,j = 1,2,3,4$
+
+        -   The probability of surviving lung cancer t days past treatment is not the same for at least two types of lung cancer.
+
+(c) Conduct the log-rank test to determine if the survival experiences differ in the populations at the .01 level. Follow the sample code provided in the middle of **Page 81** of the Workbook, replacing **Years** with **time**, **Censor** with **status**, **Gender** with **celltype**, and changing the name of the data set. Be sure to clearly state the values of the test statistic and $p$-value (do not simply supply the R output) and state a conclusion in the context of the problem.
+
+```{r}
+#| message: false
+veteran1 <- read_table(here("data", "Veteran.txt"))
+
+survdiff(Surv(time, status)~celltype, data=veteran1)
+```
+
+test-statistic: 25.4
+
+p-value: approx. 0 (1e-05)
+
+Reject $H_o$. At any reasonable level of significance, we can conclude that the probability of surviving past t days differs for at least two different types of lung cancer .
+
+------------------------------------------------------------------------
+
+## Problem 8
+
+The **Fruitfly** Minitab data file (located in the **Homework 4** folder) includes measurements on the lifetimes of male fruit flies and the number of female partners they had. The following variables are available in the file:
+
+-   **Partners**: Number of female companions (0, 1 or 8)
+-   **Type**: Type of companion (0: newly pregnant female; 1: virgin female; 9: not applicable (when PARTNERS=0))
+-   **Longevity**: Lifespan, in days
+-   **Thorax**: Length of thorax in mm
+-   **Sleep**: Percentage of each day spent sleeping
+
+Use the data to investigate the following problems:
+
+(a) Construct the Kaplan-Meier curves for the lifetimes of the fruitflies by number of partners (include this graph in your assignment). Briefly comment on the observed relationship between survival and number of female partners.
+
+    ![](images/clipboard-205600004.png)
+
+    For fruit flies with 0 and 1 the probability of survival decreases at a constant rate after roughly 40 days, meanwhile the probability begins to decrease at a constant rate for those with 8 partners after roughly 25 days. For all time t, the probability of survival for flys with 8 partners is lower than it is for flys with 0 or 1 partner. This difference decreases over time.
+
+(b) State the null and alternative hypotheses (in words and symbols) for comparing the survival experiences for the appropriate populations in this study.
+
+    -   $H_o: S_{0}(t) = S_{1}(t) = S_{8}(t)\text{ for all t}$
+
+        -   The probability of surviving for t days is the same for male fruit flys with 0, 1, or 8 partners.
+
+    -   $H_A: S_{i}(t) \ne S_{j}(t) \text{ for some t}; i \ne j; i,j = 0, 1, 8$
+
+        -   The probability of surviving for t days is differs between male fruit flys in at least two of the following groups: 0, 1, or 8 partners.
+
+(c) Perform the log-rank and Wilcoxon tests. Report the test statistics and $p$-values for both tests. At the .01 significance level, state the conclusions for both tests. If the tests yield different conclusions, then briefly explain why.
+
+    -   log-rank
+
+        -   test-statistic: 7.2469
+
+        -   p-value: 0.027
+
+        -   Fail to Reject $H_o$. At the 1% significance level, we do not have sufficient evidence that the probability of surviving past t days differs for male fruit flies with 0, 1, or 8 partners.
+
+    -   Wilcoxon
+
+        -   test-statistic: 10.7741
+
+        -   p-value: 0.005
+
+        -   Reject $H_o$. At the 1% significance level, we have sufficient evidence that the probability of surviving past t days differs for male fruit flies in at least two of the following groups: 0, 1, or 8 partners.
+
+    -   The results of the test differ because the difference in survival between male fruit flies with 8 partners and 0 or 1 partner is great at small values of t, and decreases over time.
