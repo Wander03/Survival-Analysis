@@ -71,7 +71,7 @@ Solve the following problems (by hand) based on the observed event times. Note: 
 (b) Find the estimated Nelson-Aalen type estimates of cumulative hazard for the complete event times.
 
 | i | Time Interval | $n_i$ | $d_i$ | $\hat{p}_i$ | $\hat{S}(t)$ | $\tilde{h}(t) = \frac{d_i}{n_i}$ | $\hat{h}(t) = \frac{\frac{d_i}{n_i}}{t_{(i + 1)} - t_{(i)}}$ | $\tilde{H}(t) = \sum_{t_{(i)} \le t}\tilde{h}(t_{(i)})$ |
-|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 | 0 | \[0, 9) | 10 | 0 | 1 | 1 | 0 | 0 | 0 |
 | 1 | \[9, 13) | 10 | 1 | 9/10 = 0.9 | 0.9 | 1/10 = 0.1 | 0.1 / (13 - 9) = 0.025 | 0.1 |
 | 2 | \[13, 18) | 9 | 1 | 8/9 = 0.889 | 0.8 | 1/9 = 0.111 | 0.111 / (18 - 13) = 0.022 | 0.211 |
@@ -290,7 +290,7 @@ Read the article (located in the **Homework 4** folder) entitled “Treatment of
 In Winter 2020, students participated in an activity that compared the chip melting experiences between two types of chocolate chips: semi-sweet and dark chocolate. The times it took for the two types to “completely melt” in student’s mouths were recorded. Students were randomly assigned to either the semi-sweet or dark chocolate group and the times to melt were recorded. The study ended at 75 seconds. To keep notation consistent: Group 1 refers to the **semi-sweet chocolate** group, and Group 2 refers to the **dark chocolate** group. We are interested in comparing the “survival” experiences in the populations of semi-sweet chocolate and dark chocolate chips. The chip melting times that were recorded are shown below. You’ll need these to answer parts (b) and (c) of Problem 1. Censored times are denoted with a “+” to the right of it:
 
 |                      |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |
-|----------|----|----|----|----|----|----|-----|-----|----|----|----|----|----|----|----|----|-----|
+|----------------------|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
 | Semi-Sweet (Group 1) | 32  | 42  | 44  | 45  | 49  | 49  | 51  | 54  | 55  | 76  | 74  | 75+ | 75+ | 75+ | 75+ |     |     |
 | Dark (Group 2)       | 38  | 49  | 53  | 59  | 64  | 72  | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ | 75+ |
 
@@ -307,7 +307,7 @@ In Winter 2020, students participated in an activity that compared the chip melt
 (b) The partially complete table below consists of quantities required to compute the log-rank statistic is shown below. Complete the first four rows of the table.
 
     | i | $t_{(i)}$ | Interval | $n_i$ | $d_i$ | $d_i / n_i$ | $n_{1i}$ | $d_{1i}$ | $n_{2i}$ | $E_{1i}$ | $V_{1i}$ |
-    |:-----:|:-----:|:------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+    |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
     | 1 | 32 | \[32, 38) | 32 | 1 | 1/32 | 15 | 1 | 17 | .469 | .249 |
     | 2 | 38 | \[38, 42) | 31 | 1 | 1/31 | 14 | 0 | 17 | .452 | .248 |
     | 3 | 42 | \[42, 44) | 30 | 1 | 1/30 | 14 | 1 | 16 | .467 | .249 |

@@ -1,0 +1,219 @@
+---
+title: "STAT 417: Survival Analysis Methods"
+subtitle: "Computing Assignment 6: Due Friday 2-14-2025 at 11:59pm"
+author: "Name: Andrew Kerr"
+embed-resources: true
+---
+
+# Instructions
+
+Instructions for performing the log-rank (and Wilcoxon) tests in Minitab are at the end of this lab.
+
+```{r}
+#| include: false
+#| message: false
+
+library(tidyverse)
+library(here)
+library(survival)
+source(here("functions", "plot.haz.R"))
+```
+
+## 1. Graduate Data Analysis
+
+The text file `Graduate.txt` located in the **Computing Assignment 6** folder contains the time (in years) that 1000 students (472 males and 528 females) took to graduate (obtain a bachelor's degree) from college (measured from the time they entered a post-secondary institution, i.e. either a junior college or four-year degree-granting institution). The `Gender` column contains the gender of each student, and `Censor` contains the values of the censoring status variable. Save the data file to a particular location and open (import) the data into your R session.
+
+### (a) Kaplan-Meier Estimates
+
+Suppose it is of interest to compare the "survival" experiences in the populations of male and female college students. To construct the Kaplan-Meier estimates for males and females, type:
+
+`KM.obj <- survfit(Surv(Years, Censor) ~ as.factor(Gender), data=graduate, conf.type="none")`
+
+Note that the `as.factor()` specification for variable `Gender` designates the variable to be treated as categorical (important later when we discuss regression models for survival data). Now plot the curves and differentiate between the male and female curves using the syntax:
+
+```         
+plot(KM.obj, lty=1:2)
+legend(1, .4, c("Males", "Females"), lty=1:2)
+```
+
+Briefly compare the survival experiences of male and female students in the samples.
+
+```{r}
+graduate <- read_table(here("data", "Graduate.txt"))
+
+KM.obj <- survfit(Surv(Years, Censor) ~ as.factor(Gender), data=graduate, conf.type="none")
+
+plot(KM.obj, lty=1:2)
+legend(1, .4, c("Males", "Females"), lty=1:2)
+```
+
+The survival of both male and female students sharply decreases just before 4 years, continuing to gradually decrease until around 8 years where it becomes constant. The probability of survival for male students is greater than that for female students for all time t, meaning that male students tend to take longer to complete their bachelor's degree then female students.
+
+### (b) Kaplan-Meier Estimates by Gender
+
+Now obtain the Kaplan-Meier estimates and related quantities by gender by using the syntax:
+
+```         
+summary(KM.obj)
+print(KM.obj)
+```
+
+Which gender typically graduates faster? Report the estimated median times to graduate for the male and female students to address this question.
+
+```{r}
+summary(KM.obj)
+print(KM.obj)
+```
+
+Female students tend to graduate faster with a median survival time of 4.58 years compared to male students with a median survival time of 4.75 years.
+
+### (c) Hypotheses
+
+State the null and alternative hypotheses in words and using symbols to compare the overall survival experiences of males and females.
+
+-   $H_o: S_F(t) = S_{M}(t) \text{ for all t}$
+
+    -   The probability of not graduating with a bachelor's degree past year t is the same for female and male students.
+
+-   $H_A: S_F(t) \ne S_{M}(t) \text{ for some t}$
+
+    -   The probability of not graduating with a bachelor's degree past year t differs for at least one year for female and male students.
+
+### (d) Log-Rank Test
+
+Perform the log-rank test to compare the "survival" experiences of the population of male and female college students. Use the syntax:
+
+`survdiff(Surv(Years, Censor) ~ Gender, data=graduate)`
+
+Be sure to report the values of the test statistic and the $p$-value. State a conclusion in the context of the problem. Use a level of significance of 0.01.
+
+```{r}
+survdiff(Surv(Years, Censor) ~ Gender, data=graduate)
+```
+
+test-statistic: 6.1
+
+p-value: 0.01
+
+Reject $H_o$. At the 1% level of significance, we have sufficient evidence that the probability of not graduating with a bachelor's degree beyond year t differs for female and male students.
+
+## 2. COVID-19 in Mexico
+
+We will begin examining data on individuals in Mexico who tested positive for the coronavirus, i.e. they tested positive for SARS-CoV2, the virus that causes COVID-19. The Ministry of Health is a branch of the Mexican government that is primarily responsible for disease prevention and health promotion of the population (similar to the CDC in the United States). Its mission is to establish State policies regarding these responsibilities. To inform the public regarding individuals who have been tested for SARS-CoV2, the Ministry of Health maintains a rich database containing a wide array of information on each person who has been tested for the virus. **NOTE**: In 2020, the database was updated daily (except on weekends and holidays) and could be accessed and downloaded freely; however, I have not been able to access an updated file since mid-2021.
+
+We will work with a subset of the database, focusing only on those individuals who had tested positive for SARS-CoV2 as of September 27, 2020 (before the late fall surge of cases). The text file `Mex.Covid.txt` and the Minitab file `MexCOVID.mux` located in the **Computing Assignment 6** folder contain demographic and health information, as well as type of care received for 730,317 individuals who had tested positive for SARS-CoV2 and had experienced their first symptom by September 27, 2020.
+
+Most of the variables that we will be examining are described briefly below:
+
+### Demographic Information (values in parentheses):
+
+-   **Age** (years): Age of person in years
+-   **Age Group** (0-9 years; 10-19 years; etc.): Age category in 10-year intervals
+-   **Gender** (Male/Female): gender of person
+
+### Some of the Health Information Indicators (values in parentheses):
+
+-   **Pneumonia** (Yes/No/Unknown): an infection that inflames the air sacs in one or both lungs
+-   **Diabetes** (Yes/No/Unknown): disease occurring when blood sugar levels are too high
+-   **COPD** (Yes/No/Unknown): whether the person has chronic obstructive pulmonary disease (COPD), a chronic inflammatory lung disease that causes obstructed airflow from the lungs.
+-   **Asthma** (Yes/No/Unknown): a condition in which the airways narrow and swell, potentially triggering shortness of breath, coughing, and wheezing when breathing.
+-   **Immunosuppressed** (Yes/No/Unknown): weakened immune system
+-   **Hypertension** (Yes/No/Unknown): high blood pressure
+-   **Cardiovascular Disease** (Yes/No/Unknown): class of diseases that involve the heart or blood vessels
+-   **Obese Obesity** (Yes/No/Unknown): a condition stemming from an excessive amount of body fat
+-   **Chronic Kidney Failure** (Yes/No/Unknown): gradual loss of kidney function when dangerous levels of fluid, electrolytes, and waste build up
+-   **Habitual Smoker** (Yes/No/Unknown): whether the person indicated he/she regularly smokes cigarettes
+
+### Type of Care Information (values in parentheses):
+
+-   **TypeCare** (Hospitalization/Outpatient): whether the person required hospitalization or was able to recover at home
+-   **Intubated** (Yes/No/NA): whether the person required intubation. Intubation is the process of inserting a tube through the mouth and airway so that a patient can be placed on a ventilator to assist with breathing.
+-   **ICUAdmit** (Yes/No/NA/Unknown): whether the person was admitted to the ICU
+
+For those individuals who tested positive for SARS-CoV2, we will be investigating the following time-to-event variable (using the censoring status indicator below):
+
+-   **TID**: Time (in days) from first symptom of COVID-19 until death
+-   **Censor**: Takes the value 1 if the individual experienced death; 0 if the individual did not die by September 27th, 2020)
+
+### Use Minitab to solve the following problems:
+
+#### (a) Kaplan-Meier Curves
+
+For at least three of the health conditions and/or type of care indicators and/or demographic indicators, construct and compare the Kaplan-Meier curves for those who do and do not have a health condition or who did and did not have a particular type of care, or by gender or by age group. You will likely have more than two curves due to the "Unknown" and/or "NA" categories, but you do not need to examine curves that correspond to those options.
+
+![](images/clipboard-1860153136.png){fig-align="center"}
+
+The probability of survival after the first symptom of COVID-19 decreases for all age groups within the first 25-50 days, before remaining constant. The rate of decrease is different for each age group, with a general trend of older age groups decreasing at a sharper rate than younger age groups. Those pre-teen to their 50s have the highest probability of survival, with increasing steep decreases in survival for older age groups.
+
+![](images/clipboard-1744929658.png){fig-align="center"}
+
+The probability of survival after the first symptom of COVID-19 decreases sharply within the first 25-75 days for both smokers and non-smokers, remaining constant afterwords. The estimated survival of non-smokers is greater than that of smokers for all time t.
+
+![](images/clipboard-360538278.png){fig-align="center"}
+
+The probability of survival after the first symptom of COVID-19 decreases sharply for those that require hospitalization, going to zero around 50 days in, while barely decreasing at all for those who were able to recover at home.
+
+#### (b) Log-Rank Test
+
+For those health/demographic/care indicators you examined in part (a), perform the log-rank test. You will likely have more than two groups due to the "Unknown" and/or "NA" categories. You don't have to state the hypotheses for each test, but provide the test statistic, $p$-value, and state a conclusion in context.
+
+Age Group:
+
+-   test-statistic: 124206
+
+-   p-value: 0.000
+
+-   Reject $H_o$. For any reasonable level of significance, we have sufficient evidence that the probability of dying from COVID-19 beyond day t differs for at least two age groups.
+
+Smoker:
+
+-   test-statistic: 334.825
+
+-   p-value: 0.00
+
+-   Reject $H_o$. For any reasonable level of significance, we have sufficient evidence that the probability of dying from COVID-19 beyond day t differs for smokers and non-smokers.
+
+Type of Care:
+
+-   test-statistic: 214959
+
+-   p-value: 0.000
+
+-   Reject $H_o$. For any reasonable level of significance, we have sufficient evidence that the probability of dying from COVID-19 beyond day t differs depending on type of care (hospitalization or at home).
+
+#### (c) Optional: R Analysis
+
+**Optional**: Open the text file `Mex.Covid.txt` into an R session and do the following:
+
+1.  Construct the Kaplan-Meier curve for all the event times and comment.
+
+    ```{r}
+    covid <- read_table(here("data", "Mex.Covid.txt"))
+
+    KM.obj <- survfit(Surv(TTD, Censor) ~ 1, data=covid, conf.type="none")
+
+    plot(KM.obj, lty=1:2)
+    ```
+
+    The probability of survival after the first symptom of COVID-19 slightly decreases between roughly 25-50 days before remaining constant at around 0.9 for the rest of time t.
+
+2.  Construct the Kaplan-Meier type estimator of the hazard curve using the `plot.haz` function for all the event times and comment on the conditional risk of dying over time.
+
+    ```{r}
+    invisible(plot.haz(KM.obj))
+    ```
+
+The risk of dying from COVID-19 after after the first symptom of COVID-19 is highest between 0 and 25 days, decreasing after 25 days to 50 days before remaining constant afterwords.
+
+## Minitab Instructions for Log-Rank and Wilcoxon Tests
+
+1.  Open the Minitab data file that contains at least a time variable, a censoring status variable, and a grouping variable. Or create a Minitab worksheet that contains values of these variables.
+2.  On the top menu, follow: **Stat** $\rightarrow$ **Reliability/Survival** $\rightarrow$ **Distribution Analysis (Right Censoring)** $\rightarrow$ **Nonparametric Distribution Analysis**
+3.  Enter the *time* variable in the "Variables:" box.
+4.  Enter the *grouping* variable (e.g. you have the grouping variable gender) by checking the "By variable:" box and entering it.
+5.  On the right, click the "Censor..." button. Then:
+    -   Enter the censoring status variable in the "Use censoring column:" box by double-clicking the variable. Note: you may have to first click inside the box to view all the variables in the file.
+    -   In the "Censoring value:" box, enter the value of the indicator variable that corresponds to a censored event time (usually a value of 0 or 1). Note: in all the course files, a censoring status value of 0 will correspond to a censored event time.
+    -   Click the "OK" box.
+6.  Click "OK"
+7.  Results of the log-rank and Wilcoxon tests are displayed at the bottom of the output in the "Test Statistics" table.
