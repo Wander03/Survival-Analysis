@@ -1,0 +1,115 @@
+---
+title: "STAT 417: Survival Analysis Methods"
+subtitle: "Computing Assignment 7: Due Friday 2-21-2025 at 11:59"
+author: "Andrew Kerr"
+embed-resources: true
+---
+
+The `Rearrest.txt` data file located in the Computing Assignment Week 7 folder contains the measurements on the following variables:
+
+-   **months**: time (in months) from prison release to re-arrest
+-   **censor**: the censoring status indicator variable
+-   **personal**: `personal=1` if former inmate had a history of person-related crimes (i.e. those with one or more convictions for offenses such as aggravated assault or kidnapping), and `0` otherwise.
+-   **property**: `property=1` if former inmate was convicted of a property-related crime, `0` otherwise.
+-   **cenage**: the "centered" age of individual, i.e. the difference between the age of the individual upon release and the average age of all inmates in the study. For example, a subject with value `8.3` for `cenage` is at the time of release, `8.3` years older than the average age of all former inmates.
+
+Import the `Rearrest` into your R session and answer the following questions:
+
+```{r}
+#| include: false
+#| message: false
+library(tidyverse)
+library(here)
+library(survival)
+```
+
+```{r}
+Rearrest <- read_table(here("data", "Rearrest.txt"))
+```
+
+### 1. Fit a one predictor Cox regression model to the Rearrest data with the categorical predictor `property`.
+
+Make sure to first load the `survival` library and then use the syntax:
+
+`cr.obj <- coxph(Surv(months,censor)~as.factor(property), data=Rearrest)summary(cr.obj)`
+
+Note that when you include a categorical predictor in your model, you should designate it as a "factor" with `as.factor()`.
+
+```{r}
+cr.obj <- coxph(Surv(months,censor)~as.factor(property), data=Rearrest)
+summary(cr.obj)
+```
+
+#### (a) Report and interpret the parameter estimate $\hat{\beta}$ in the context of the problem.
+
+$\hat{\beta} = 1.1946$
+
+The estimated log hazard of rearrest for inmates who committed property related crimes is 1.1946 higher then the estimated log hazard of rearrest for inmates who did not commit property related crimes, regardless of the number of months since release from prison.
+
+#### (b) Find and interpret (in context) the estimated hazard ratio comparing former inmates who did and did not commit property related crimes.
+
+$\widehat{HR} = 3.3022$
+
+The estimated hazard of rearrest for inmates who committed property related crimes is 230.22% higher then the estimated hazard of rearrest for inmates who did not commit property related crimes, regardless of the number of months since release from prison.
+
+#### (c) Conduct the Wald test (at the .05 significance level) to determine if the risk of re-arrest is significantly different for former inmates who did and did not commit property related crimes. Be sure to report the test statistic and p-value, and state a conclusion in the context of the problem.
+
+test statistic: $Z = 3.42$
+
+p-value: 0.000626
+
+Reject $H_o$. At the 5% significance level, we can conclude that whether the inmate committed a property related crime is a significantly useful predictor of the hazard of rearrest.
+
+### 2. Fit a one predictor Cox regression model to the **Rearrest** data with the quantitative predictor **cenage**.
+
+The syntax will be similar to that given above, *except* replace the predictor **property** with **cenage** and do not designate as a factor.
+
+```{r}
+cr.obj <- coxph(Surv(months,censor)~cenage, data=Rearrest)
+summary(cr.obj)
+```
+
+#### (a) Compute and interpret (in context) the hazard ratio corresponding to a one year increase in **cenage**.
+
+$\widehat{HR} = 0.93414$
+
+The hazard of rearrest for inmates is estimated to decrease by 6.586% for each year increase in "centered" age (inmates age at time of release - average age of inmates at time of release), regardless of the number of months since release from prison.
+
+#### (b) Is the predictor significantly associated with risk of re-arrest? Conduct the Wald test at the .05 significance level: report the test statistic and $p$-value, and state a conclusion in the *context* of the problem.
+
+test statistic: $Z = -4.359$
+
+p-value: 0.0000131
+
+Reject $H_o$. At the 5% significance level, we can conclude that the "centered" age of an inmate is a significantly useful predictor of the hazard of rearrest.
+
+### 3. Recall the chocolate chip melting activity that compared the melting times between semi-sweet and dark chocolate chips.
+
+The text file `SemiDarkMeltTimes.txt` located in the **Computing Assignment Week 7** folder contains the measurements on the type of chip, melting time, and censoring status. Fit a one predictor Cox regression model to the chip data with the predictor **Type**. The syntax will be similar to that given in Problem (1), but replace the time variable, censoring variable, and data set names.
+
+```{r}
+SDKTimes <- read_table(here("data", "SemiDarkMeltTimes.txt"))
+```
+
+```{r}
+cr.obj <- coxph(Surv(`Time(sec)`,C)~as.factor(Type), data=SDKTimes)
+summary(cr.obj)
+```
+
+#### (a) If we assume that the "proportional hazards" condition is satisfied, then briefly explain what that means in the context of this problem.
+
+If the proportional hazards condition is satisfied, then that would mean that the ratio of the hazards for Semi-sweet and Dark chocolate chips is constant over time, which means that the association between hazard and type of chocolate chip does not depend on time.
+
+#### (b) Report and interpret the value for $e^{\hat{\beta}}$ in the context of the problem.
+
+#### $e^{\hat{\beta}} = 3.1663$
+
+The estimated hazard of the chocolate chip melting for Semi-sweet Chocolate Chips is 216.63% higher than the estimated hazard for Dark Chocolate Chips, regardless of the amount of seconds since the experiment began.
+
+#### (c) Determine if **Type** is a significantly useful predictor by conducting the Wald test at the .05 significance level: report the test statistic and $p$-value, and state a conclusion in the *context* of the problem.
+
+test statistic: $Z = 2.25$
+
+p-value: 0.0245
+
+Reject $H_o$. At the 5% significance level, we can conclude that the Type of Chocolate Chip is a significantly useful predictor of the hazard of melting.
