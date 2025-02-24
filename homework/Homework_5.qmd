@@ -1,0 +1,254 @@
+---
+title: "Homework 5"
+due_date: "Wednesday, February 19, 2025 at 11:59pm"
+course: "STAT 417: Survival Analysis Methods"
+author: "Andrew Kerr"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| include: false
+#| message: false
+
+library(tidyverse)
+library(here)
+library(survival)
+
+halibut <- read_table(here("data", "Halibut.txt"))
+Mex.Covid <- read_table(here("data", "Mex.Covid.txt"))
+```
+
+# 1. Halibut Survival Data
+
+Recall the data on the lifetimes of halibut caught for an experiment on size regulation. For this problem, you won’t need the data, but here are a few variable descriptions:
+
+-   **TIME**: survival time of halibut (time until death) in hours (measured from time of capture).
+-   **TOWD**: duration (in minutes) of time trawl net was towed on the bottom. Note: TOWD only takes on two possible values (30 or 100 minutes) and should be treated as a categorical explanatory variable. Let $X = 1$ if the tow duration is 100 minutes and $X = 0$ if the tow duration is 30 minutes.
+
+(a) Suppose it is of interest to model the risk of death with the Cox regression model with the single predictor TOWD. Assume that (we hypothesize) $\beta = 0.75$ for the Cox regression model. Write out the form of the Cox regression model, and briefly interpret $\beta = 0.75$ in the model.
+
+    $h_0(t)e^{0.75 \times \text{TOWD}}$
+
+    The log hazard of death for halibuts caught in a trawl net towed for 100 minutes is estimated to be 0.75 higher than the log hazard of death for halibuts caught in a trawl net towed for 30 minutes, regardless of amount of time captured.
+
+(b) In the context of the problem, briefly explain what the proportionality assumption implies about the hazard of dying for the halibut.
+
+    The proportionality assumption implies that the ratio of the hazards for halibut caught in a trawl net towed for 30 minutes and 100 minutes is constant over time, which means that the association between hazard and duration of trawl net towing does not depend on time.
+
+# 2. Analyzing Halibut Data
+
+The text file `Halibut.txt` contains measurements on 294 Atlantic halibut:
+
+-   **TIME**: survival time of halibut (time until death) in hours (measured from time of capture).
+-   **CENSOR**: the censoring indicator taking value 1 for complete event times
+-   **TOWD**: duration (in minutes) of time trawl net (used to collect the halibut) was towed on the bottom. Note: Since TOWD only takes on two possible values (30 or 100 minutes), treat it as categorical. So let X = 1 if the tow duration is 100 minutes and X = 0 if the tow duration is 30 minutes.
+-   **DELDEPTH**: difference between maximum and minimum depth observed during tow (depth measured in meters).
+-   **LENGTH**: fork length of halibut in centimeters.
+-   **HANDTIME**: handling time (in minutes) between net coming on board vessel and fish being placed in holding tanks.
+-   **LOGCAT**: natural logarithm of total catch of fish in tow.
+
+Read the data file into R and fit the Cox regression model:
+
+$$
+cr.obj \leftarrow coxph(Surv(TIME, CENSOR) \sim as.factor(TOWD), data = halibut)
+$$
+
+$$
+summary(cr.obj)
+$$
+
+Given the output:
+
+```{r}
+cr.obj <- coxph(Surv(TIME,CENSOR)~as.factor(TOWD), data=halibut)
+summary(cr.obj)
+```
+
+So the term as.factor(TOWD)100 = 1 if tow duration is 100 minutes and as.factor(TOWD)100 = 0 if tow\
+duration is 30 minutes. Use relevant output to address the following questions:
+
+(a) Interpret the estimated coefficient corresponding to TOWD.
+
+    The log hazard of death for halibut caught in a trawl net towed for 100 minutes is estimated to be 0.6986 higher than the log hazard of death for halibut caught in a trawl net towed for 30 minutes, regardless of the amount of time since capture.
+
+(b) Assess the significance of TOWD using the Wald test. Report the test statistic and p-value and state a conclusion.
+
+    $Z = 5.389$
+
+    p-value = 7.09e-08
+
+    Reject $H_o$. At any reasonable confidence level, we can conclude that TOWD (duration of time trawl net was towed) is a significantly useful predictor of the hazard of death for halibut.
+
+(c) Compute the estimated hazard ratio comparing the hazard of death for halibut caught in a net towed\
+    on the bottom for 100 minutes to the hazard of death for halibut caught in a net towed for 30 minutes. Interpret the estimated hazard ratio.
+
+    $\widehat{HR} = 2.0110$
+
+    The hazard of death for halibut caught in a trawl net towed for 100 minutes is estimated to be 101.1% higher than the hazard of death for halibut caught in a trawl net towed for 30 minutes, regardless of amount of time since capture.
+
+(d) Construct a confidence interval for the true hazard ratio that you estimated in part (c). Show your\
+    work. Interpret the confidence interval in the context of the problem.
+
+    $$
+    \begin{align*}
+    CI &= exp[\hat{\beta} \pm z^* \times SE(\hat{\beta})] \\
+    &= exp[0.6986 \pm 1.96 \times 0.1296] \\
+    &= (e^{0.444584}, e^{0.952616}) \\
+    &= (1.5598, 2.5925) 
+    \end{align*}
+    $$ \
+    We are 95% confident that the hazard of death for halibut caught in a trawl net towed for 100 minutes is between 55.98% and 159.25% higher than that for halibut caught in a trawl net towed for 30 minutes, regardless of amount of time since capture.
+
+(e) Based on your answer in part (d), is there a significant difference between the hazard rates for the\
+    two groups of halibut? Briefly explain.
+
+    Based on the confidence interval, there is a significant difference between the two groups because 1 is not included in the confidence interval!
+
+(f) Now consider a multi-variable Cox regression model containing the explanatory variables LENGTH and TOWD. Write out the form of the (hypothesized) Cox regression model (using β parameters), and briefly interpret each parameter in the model.
+
+    **TODO**
+
+# 3. Hypothetical Covid-19 Models
+
+You will begin examining the Covid19 data from Mexico in the next problem, but for this problem we will\
+consider some hypothetical one-variable models with hypothesized values of the parameters. The time-\
+to-event variable will be defined as T = time (days) from first symptom of Covid19 until death for those\
+individuals who test positive for SARS-COV2 (the novel coronavirus that causes Covid19). Define the\
+following predictors:
+
+-   **Gender**: X = 1 if person who tested positive is female and X = 0 if person who tested positive is\
+    male.
+-   **Age**: X = age (in years) of the person who tested positive
+
+(a) Suppose it is of interest to model the risk of death from Covid19 with Gender. If it is assumed\
+    (hypothesized) that β = −.03, then compute and interpret the (true) hazard ratio comparing females\
+    to males.
+
+    $$
+    \begin{align*}
+    \widehat{HR} &= e^{\beta c} \\
+    &= e^{-0.03 \times 1} \\
+    &= 0.9704
+    \end{align*}
+    $$
+
+    The hazard of death for females who tested positive for SARS-COV2 is estimated to be 2.96% lower than males who tested positive for SARS-COV2, regardless of the number of days since first symptom.
+
+(b) Suppose it is of interest to model the risk of death from Covid19 with Age. If it is assumed (hypoth-\
+    esized) that β = .05, then compute and interpret the (true) hazard ratio corresponding to a 1-year\
+    increase in age.
+
+    $$
+    \begin{align*}
+    \widehat{HR} &= e^{\beta c} \\
+    &= e^{0.05 \times 1} \\
+    &= 1.0513
+    \end{align*}
+    $$
+
+    The hazard of death for individuals who tested positive for SARS-COV2 is estimated to increase by 5.13% for each 1-year increase in age, regardless of the number of days since first symptom.
+
+# 4. Covid-19 Data Analysis (Mexico)
+
+The Mexico Covid19 data file, `Mex.Covid.txt` is located in the Homework 5 folder. The time-to-event\
+variable will be defined as T = time (days) from first symptom of Covid19 until death for those individuals\
+who test positive for SARS-COV2 (the novel coronavirus that causes Covid19). Define the following\
+predictors:
+
+-   **Gender (X1)**: $X_1 = 1$ if person who tested positive is female and $X_1 = 0$ if person who tested positive is male
+-   **Age (X2)**: $X_2$ = Age (in years) of the person who tested positive
+
+(a) Suppose it is of interest to model the risk of death from Covid19 using the predictor Gender. Fit\
+    the CR Model with the predictor Gender and then report and interpret the estimated hazard ratio\
+    comparing females to males. Import the data file `Mex.Covid.txt` into your R session and use the\
+    following syntax (Note that the output will yield an estimated coefficient that compares males to\
+    females. Be sure to make the appropriate adjustment to the estimated hazard ratio to compare\
+    females to males.)
+
+    ```{r}
+    Mex.cph <- coxph(Surv(TTD,Censor)~as.factor(Gender), data=Mex.Covid)
+    summary(Mex.cph)
+    ```
+
+    $$
+    \widehat{HR} = e^{-\beta} = e^{-0.526271} = 0.590804 
+    $$
+
+    The hazard of death for females who tested positive for SARS-COV2 is estimated to be 40.92% lower than males who tested positive for SARS-COV2, regardless of the number of days since first symptom.
+
+(b) Suppose it is of interest to model the risk of death from Covid19 using the predictor Age. Fit the CR\
+    Model with the predictor Age and then report and interpret the estimated hazard ratio corresponding\
+    to a 1-year increase in age. Use the following syntax:
+
+    ```{r}
+    Mex.cph <- coxph(Surv(TTD,Censor)~Age, data=Mex.Covid)
+    summary(Mex.cph)
+    ```
+
+    The hazard of death for individuals who tested positive for SARS-COV2 is estimated to increase by 6.75% for each 1-year increase in age, regardless of the number of days since first symptom.
+
+(c) Construct and interpret a 95% confidence interval for the true hazard ratio corresponding to a 10 year\
+    increase in age. The critical value is 1.96.
+
+    $$
+    \begin{align*}
+    CI &= exp[\hat{\beta} \pm z^* \times SE(\hat{\beta})]^c \\
+    &= exp[0.0653 \pm 1.96 \times 0.0002]^{10} \\
+    &= (e^{0.06486829}, e^{0.06571031})^{10} \\
+    &= (1.067018, 1.067917)^{10} \\
+    &= (1.913011, 1.92919)
+    \end{align*}
+    $$\
+    We are 95% confident that the hazard of death for individuals who tested positive for SARS-COV2 increases by 91.13% to 92.92% for each 10-year increase in age, regardless of the number of days since first symptom..\
+
+(d) Now consider a multi-variable Cox regression model containing the explanatory variables $X_1$ and $X_2$. Write out the form of the (hypothesized) Cox regression model (using β parameters).
+
+    **TODO**\
+
+(e) Using your answer in part (d), construct the hazard ratio that compares the hazard (of dying from\
+    Covid19) for females who are 75 years old to the hazard of dying for males who are 85 years old.\
+    Leave your answer in terms of $\beta_1$ and $\beta_2$.
+
+    **TODO**
+
+# 5. Extended Covid-19 Analysis
+
+Now consider the following explanatory variables in the `Mex.Covid.txt` data file:
+
+-   **Asthma (X3)**: $X_3 = 1$ if the person who tested positive has asthma; 0 if not.
+-   **Obese (X4)**: $X_4 = 1$ if the person who tested positive is obese; 0 if not.
+
+Some individuals have value of “unknown” for one or more of the health indicator variables. To facilitate\
+interpretation of the models, those individuals with “unknown” values for Obese and Asthma need to be\
+removed from the data file. Remove individuals with the “unknown” values by using the following syntax:
+
+```{r}
+Mex.Covid <- Mex.Covid[Mex.Covid$Obese!="Unknown",]
+Mex.Covid <- Mex.Covid[Mex.Covid$Asthma!="Unknown",]
+```
+
+Now fit the Cox regression model containing the explanatory variables Gender (X1), Age (X2), Asthma\
+(X3), and Obese (X4) using the syntax:
+
+```{r}
+cr.obj <- Mex.cph <-coxph(Surv(TTD,Censor)~as.factor(Gender)+Age+as.factor(Asthma)+
+as.factor(Obese), data=Mex.Covid)
+summary(cr.obj)
+```
+
+Use the output to solve the following problems.
+
+(a) Assess the significance of the overall model using the partial likelihood ratio test. State the null and\
+    alternative hypotheses, report the test-statistic and p-value, and state a conclusion in the context of\
+    the problem.
+
+(b) Interpret the estimated exponentiated coefficient corresponding to Asthma.
+
+(c) Perform the Wald Test for the predictor Age. Report the test statistic, p-value, make a decision, and\
+    state a conclusion in context.
+
+(d) Interpret the confidence interval (1.528, 1.5799) reported in the output.
+
+(e) Estimate the hazard ratio comparing the hazard of death from Covid19 for males who are 35 to the hazard of death from Covid19 for females who are 46, adjusting for asthma and obesity status.
