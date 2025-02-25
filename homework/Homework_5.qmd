@@ -98,7 +98,7 @@ duration is 30 minutes. Use relevant output to address the following questions:
     &= (e^{0.444584}, e^{0.952616}) \\
     &= (1.5598, 2.5925) 
     \end{align*}
-    $$ \
+    $$\
     We are 95% confident that the hazard of death for halibut caught in a trawl net towed for 100 minutes is between 55.98% and 159.25% higher than that for halibut caught in a trawl net towed for 30 minutes, regardless of amount of time since capture.
 
 (e) Based on your answer in part (d), is there a significant difference between the hazard rates for the\
@@ -108,7 +108,15 @@ duration is 30 minutes. Use relevant output to address the following questions:
 
 (f) Now consider a multi-variable Cox regression model containing the explanatory variables LENGTH and TOWD. Write out the form of the (hypothesized) Cox regression model (using β parameters), and briefly interpret each parameter in the model.
 
-    **TODO**
+    $$
+    \begin{align*}
+    h(t|X_1, X_2) = h_0(t)e^{\hat{\beta_1}X_1 + \hat{\beta_2}X_2}; X_1 &= LENGTH \\ X_2 &= TOWD
+    \end{align*}
+    $$
+
+    -   $\hat{\beta_1}$: The estimated change in log hazard of halibut death is $\hat{\beta_1}$ for each unit increase in fork length of halibut (cm), holding trawl net towing duration constant.
+
+    -   $\hat{\beta_2}$: The estimated log hazard of halibut death is for halibuts caught in a trawl net towed for 100 minutes is $\hat{\beta_2}$ more/less then the log hazard of halibut death for halibuts caught in a trawl net towed for 30 minutes, holding the fork length of halibut constant.
 
 # 3. Hypothetical Covid-19 Models
 
@@ -205,13 +213,19 @@ predictors:
 
 (d) Now consider a multi-variable Cox regression model containing the explanatory variables $X_1$ and $X_2$. Write out the form of the (hypothesized) Cox regression model (using β parameters).
 
-    **TODO**\
+    $$
+    \begin{align*}
+    h(t|X_1, X_2) = h_0(t)e^{\hat{\beta_1}X_1 + \hat{\beta_2}X_2}; X_1 &= Gender \\ X_2 &= Age
+    \end{align*}
+    $$
 
 (e) Using your answer in part (d), construct the hazard ratio that compares the hazard (of dying from\
     Covid19) for females who are 75 years old to the hazard of dying for males who are 85 years old.\
     Leave your answer in terms of $\beta_1$ and $\beta_2$.
 
-    **TODO**
+    $$
+    \widehat{HR} = e^{\beta_1 - 10\beta_2}
+    $$
 
 # 5. Extended Covid-19 Analysis
 
@@ -244,11 +258,37 @@ Use the output to solve the following problems.
     alternative hypotheses, report the test-statistic and p-value, and state a conclusion in the context of\
     the problem.
 
+    -   $H_o: \beta_1 = \beta_2 = \beta_3 = \beta_4 = 0$
+
+    -   $H_a: \text{At least one } \beta_j \ne 0, j = 1,2,3,4$
+
+    -   $G_l = 17375$
+
+    -   p-value = $<2e-16 \approx 0$
+
+        At any reasonable significance level, we have evidence that Gender, Age, Asthma, and Obese are jointly significantly useful for predicting that hazard of death from Covid19.
+
 (b) Interpret the estimated exponentiated coefficient corresponding to Asthma.
+
+    The hazard of death from Covid19 for individuals with asthma who tested positive for SARS-COV2 is 20.72% greater than that for individuals without asthma, holding gender, age, and obese constant.
 
 (c) Perform the Wald Test for the predictor Age. Report the test statistic, p-value, make a decision, and\
     state a conclusion in context.
 
+    -   $Z = 110.71$
+
+    -   p-value = $<2e-16 \approx 0$
+
+        We Reject $H_o$. At any reasonable significance level, we have evidence that Age is a significantly useful predictor of hazard of death from Covid19, holding gender, asthma, and obese constant.
+
 (d) Interpret the confidence interval (1.528, 1.5799) reported in the output.
 
+    Since this CI is not in the output I will interpret the CI for the one most similar to this one, which is Obese: (1.340, 1.406)\
+    \
+    We are 95% confident that the hazard of death from Coivd19 for obese patients who tested positive for SARS-COV2 is between 34% and 40.6% greater than that for non-obese patients, holding gender, age, and asthma constant.
+
 (e) Estimate the hazard ratio comparing the hazard of death from Covid19 for males who are 35 to the hazard of death from Covid19 for females who are 46, adjusting for asthma and obesity status.
+
+    $$
+    \widehat{HR} = e^{\beta_1 - 11\beta_2} = e^{0.1987 - 11 \times 0.0299} = 0.8778
+    $$
