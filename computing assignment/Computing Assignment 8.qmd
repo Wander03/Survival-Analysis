@@ -1,0 +1,113 @@
+---
+title: "Extra Credit Computing Assignment Week 8"
+author: "Andrew Kerr"
+date: "Due Friday 2-28-2025 at 11:59pm"
+format: html
+editor: visual
+embed-resources: true
+---
+
+The **UMass Aids Research Unit IMPACT (UIS) Study** was a 5-year project consisting of two concurrent randomized trials of residential treatment for drug abuse. The purpose of the study was to compare treatment programs of various durations designed to reduce drug abuse and to prevent high-risk HIV behavior. Six hundred twenty-eight participants were randomly assigned to two different treatment program sites, 444 assigned to Site A and 184 to Site B. Clients at Site A participated in a 3 or 6 month program that incorporated health education and relapse prevention, and clients at Site B participated in a 6 or 12 month community program that involved a structured life-style in a communal setting. The time-to-event random variable $TIME$ measures the days until drug relapse from admission to the treatment program. There is complete information on 575 subjects. A brief description of all the variables available in the file `uissurv.txt` (located in the **Computing Assignment Week 8 folder**) is provided at the end of this computing assignment.
+
+Fit the Cox regression model with explanatory variables $X_1=SITE$ (0 = short program at Site A; 1 = long program at Site B) and $X_2=AGE$ (age in years of the patient at time of treatment) using the syntax:
+
+``` r
+cr.object <- coxph(Surv(TIME,CENSOR)~as.factor(SITE)+AGE,data=uissurv)
+summary(cr.object)
+```
+
+Note that the coefficient for $SITE$ will correspond to Site B. Use appropriate output from `summary(cr.object)` to answer the following problems:
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(here)
+library(survival)
+library(dipsaus)
+
+uissurv <- read_table(here("data", "uissurv.txt"))
+```
+
+```{r}
+cr.object <- coxph(Surv(TIME,CENSOR)~as.factor(SITE)+AGE,data=uissurv)
+summary(cr.object)
+```
+
+1.  Controlling for program site, estimate how much higher (or lower) the risk of drug relapse is for each additional year in age.
+
+    Controlling for program site, the estimated risk of drug relapse is **1.37% lower** for each additional year in age.
+
+2.  Controlling for age, estimate how much higher (or lower) the risk of drug relapse is for someone who was treated at Site B compared to someone who was treated at Site A. Be sure to indicate higher or lower in your answer.
+
+    Controlling for age, the estimated risk of drug relapse is **11.31% lower** for someone who was treated at Site B compared to someone who was treated at Site A.
+
+3.  Note the p-value = 0.0649 provided in the output. Perform the appropriate test corresponding to this p-value. State the null and alternative hypotheses and test statistic, and provide a decision and conclusion in the context of the problem. Use a 0.10 level of significance.
+
+    $H_o: \beta_{age} = 0$
+
+    $H_a: \beta_{age} \ne 0$
+
+    $Z_{age} = -1.846$
+
+    At the 10% significance level, we can conclude that age is a significantly useful predictor of risk of drug relapse, holding program site constant.
+
+4.  Interpret the confidence interval $(0.7263, 1.083)$ provided in the output.
+
+    We are 95% confidence that the true risk of relapse for participants treated for 12 months at Site B is between 27.37% lower and 8.3% higher comapred to someone who was treated for 3 months at Site A.
+
+5.  Write out the form of the true hazard ratio that compares the risk of drug relapse for a 50-year-old who was treated at Site B to someone who is 45 and was treated at Site A (leave your answer in terms of the $\beta$'s).
+
+    $$
+    \widehat{HR} = e^{\beta_{site} + 5\beta_{age}}
+    $$
+
+6.  Estimate the hazard ratio found in part (5).
+
+    $$
+    \widehat{HR} = e^{-0.119973 - (5 \times 0.013843)} = 0.8276309
+    $$
+
+7.  Use the estimated hazard ratio along with specific quantities from the estimated variance-covariance matrix of the $\hat{\beta}$'s to construct a 95% confidence interval for the true hazard ratio found in part (5). You can obtain the estimated variance-covariance matrix using the sytax:
+
+``` r
+cr.object$var
+```
+
+```{r}
+a <- 1
+b <- 5
+z <- 1.96
+betas <- cr.object$coefficients
+HR <- exp(a*betas[[1]] + b*betas[[2]])
+
+cov_matrix <- cr.object$var
+
+V_hat <- (
+  a**2 * cov_matrix[1, 1] + 
+  b**2 * cov_matrix[2, 2] + 
+  2*a*b * cov_matrix[1, 2]
+)
+SE <- sqrt(V_hat)
+
+rev(exp(log(HR) %+-% z * SE))
+```
+
+# Variable Descriptions for UIS Study:
+
+| Variable | Description | Codes/Values |
+|----------------------|------------------------|---------------------------|
+| ID | Identification Code | 1 - 628 |
+| AGE | Age at Enrollment | Years |
+| BECKTOTA | Beck Depression Score | 0.000 - 54.000 (higher scores indicate more depression) |
+| HC | Heroin/Cocaine Use During 3 Months Prior to Admission | 1 = Heroin & Cocaine, 2 = Heroin Only, 3 = Cocaine Only, 4 = Neither Heroin nor Cocaine |
+| IVHX | History of IV Drug Use | 1 = Never, 2 = Previous, 3 = Recent |
+| NDRUGTX | \# of Prior Drug Treatments | 0 - 40 |
+| RACE | Subject’s Race | 0 = White, 1 = Non-White |
+| TREAT | Treatment Randomization Assignment | 0 = Short, 1 = Long |
+| SITE | Treatment Site | 0 = A, 1 = B |
+| LOS | Length of Stay in Treatment | Days (Admission Date to Exit Date) |
+| TIME | Time to Drug Relapse | Days (Measured from Admission Date) |
+| CENSOR | Censoring status | 1 = Returned to Drugs, 0 = Censored |
