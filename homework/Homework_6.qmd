@@ -1,0 +1,331 @@
+---
+title: "Homework 6: STAT 417 - Survival Analysis Methods"
+author: "Andrew Kerr"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(here)
+library(survival)
+library(dipsaus)
+
+Mex.Covid <- read_table(here("data", "Mex.Covid_HW6.txt"))
+
+Mex.Covid <- Mex.Covid[Mex.Covid$Obese!="Unknown",]
+Mex.Covid <- Mex.Covid[Mex.Covid$Asthma!="Unknown",]
+
+Rearrest <- read_table(here("data", "Rearrest.txt"))
+```
+
+# Custom Function
+
+```{r}
+#| label: CI for complex HR function
+
+CI <- function(i, j, a, b, z, cox_reg_obj) {
+
+  betas <- cox_reg_obj$coefficients
+  
+  B <- a*betas[[i]] + b*betas[[j]]
+  
+  cov_matrix <- cox_reg_obj$var
+  
+  V_hat <- (
+    a**2 * cov_matrix[i, i] + 
+    b**2 * cov_matrix[j, j] + 
+    2*a*b * cov_matrix[i, j]
+  )
+  
+  SE <- sqrt(V_hat)
+  
+  rev(exp(B %+-% z * SE))
+  
+}
+
+```
+
+# Problem 1
+
+The Mexico Covid19 data file, `Mex.Covid.txt`, is located in the Homework 6 folder. The time-to-event variable will be defined as $T = \text{time (days)}$ from first symptom of Covid-19 until death for those individuals who test positive for SARS-COV2. Define the following variables:
+
+-   **TTD**: Time (in days) from first symptom of COVID-19 until death\
+-   **Censor**: Takes the value 1 if the individual experienced death; 0 if the individual did not die by September 27th, 2020\
+-   **Gender**: $X_1 = 1$ if male, $X_1 = 0$ if female\
+-   **Age**: $X_2 =$ Age (in years) of the person who tested positive\
+-   **Asthma**: $X_3 = 1$ if the person has asthma, 0 otherwise\
+-   **Obese**: $X_4 = 1$ if the person is obese, 0 otherwise
+
+Import the data and remove individuals with "Unknown" values for Obese and Asthma using:
+
+``` r
+Mex.Covid <- Mex.Covid[Mex.Covid$Obese!="Unknown",]
+Mex.Covid <- Mex.Covid[Mex.Covid$Asthma!="Unknown",]
+```
+
+Fit the Cox regression model:
+
+```{r}
+cr.obj <- coxph(Surv(TTD,Censor)~as.factor(Gender)+Age+as.factor(Asthma)+as.factor(Obese), data=Mex.Covid)
+summary(cr.obj)
+```
+
+Use the output to answer the following:
+
+(a) Redo the following problem from **Homework 5**: Estimate the hazard ratio comparing the hazard of
+
+    death from Covid19 for males who are 35 to the hazard of death from Covid19 for females who are
+
+    46, adjusting for asthma and obesity status.
+
+    $$
+    \widehat{HR} = e^{\hat{\beta}_1 - 11\hat{\beta}_2} = 0.8778
+    $$
+
+(b) Construct a confidence interval for the true hazard ratio that you estimated in part (a). Show your
+
+    work. Interpret the confidence interval in the context of the problem. Use the following syntax to
+
+    obtain the estimated variance-covariance matrix:\
+
+    ```{r}
+    CI(1, 2, 1, -11, 1.96, cr.obj)
+    ```
+
+    See function at beginning of HW for work!
+
+    \
+    We are 95% confident that the hazard of death from Covid19 for male individuals is between 1.78% lower and 1.59% higher than the hazard of death from Covid19 for female individuals who are 11 years older, regardless of time since first symptom of Covid19 and adjusting for asthma and obesity status.
+
+(c) Based on your answer in part (b), is there a significant difference between the hazard rates for the
+
+    two groups of persons? Briefly explain.
+
+    \
+    There is not a significant difference between the hazard rates for the two groups of individuals because 1 is within the 95% confidence interval.
+
+# Problem 2
+
+The `Rearrest` data file includes:
+
+-   **months**: Time (months) from prison release to rearrest\
+
+-   **censor**: Censoring indicator\
+
+-   **personal**: 1 if convicted of person-related crimes, 0 otherwise\
+
+-   **property**: 1 if convicted of property-related crimes, 0 otherwise\
+
+-   **cenage**: Centered age of the individual; i.e. the difference between the age of the individual upon
+
+    release and the average age of all inmates in the study. For example, a subject with value 8.3 for
+
+    cenage is at the time of release, 8.3 years older than the average age of all former inmates.
+
+Fit the Cox model:
+
+```{r}
+cr.obj <- coxph(Surv(months,censor)~as.factor(personal)+as.factor(property)+cenage, data=Rearrest)
+summary(cr.obj)
+```
+
+(a) Assess the significance of the overall model using the partial likelihood ratio test. State the null and
+
+    alternative hypotheses, report the test-statistic and p-value, and state a conclusion in the context of
+
+    the problem.\
+
+    -   $H_o: \beta_1 = \beta_2 = \beta_3 = 0$
+
+    -   $H_a: \text{At least one } \beta_j \ne 0 \text{; j = 1, 2, 3}$
+
+    -   $G_l = 38.96$
+
+    -   $p-val = 2e-08 \rightarrow \text{ } <0.001$
+
+        At any reasonable level of significance, we can conclude that personal, property, and centered age are jointly significantly useful for predicting hazard of re-arrest.
+
+(b) Compute the estimated hazard ratio comparing former inmates who did not commit a property-related
+
+    crime and who are 5 years older than the average age to former inmates who did commit a property-
+
+    related crime and who are ten years older than the average age, regardless of whether a person-related
+
+    crime was committed.\
+
+    $$
+    \widehat{HR} = e^{-\hat{\beta}_2 - 5\hat{\beta}_3} = 0.5476
+    $$
+
+(c) Report the estimated variance-covariance matrix for the estimated parameters. Use the syntax:
+
+    ```{r}
+    cr.obj$var
+    ```
+
+(d) Construct a confidence interval for the true hazard ratio that you estimated in part (b). Show your
+
+    work. Interpret the confidence interval in the context of the problem.\
+
+    ```{r}
+    CI(2, 3, -1, -5, 1.96, cr.obj)
+    ```
+
+    See function at beginning of HW for work!
+
+    We are 95% confident that the hazard of re-arrest for inmates who did not commit a property-related crime is between 60.04% lower and 64.79% higher than the hazard of re-arrest for inmates who committed a property-related crime that are 5 years older than the average age, regardless of time since release from prison and whether a person-related crime was committed.\
+
+(e) Based on your answer in part (d), is there a significant difference between the hazard rates for the
+
+    two populations of former inmates? Briefly explain.
+
+    \
+    There is not a significant difference between the hazard rates for the two populations of former inmates because 1 is within the convenience interval.
+
+# Problem 3
+
+Read the article “Women’s Susceptibility to Tobacco Carcinogens and Survival after Diagnosis of Lung\
+Cancer” located in the Homework 6 folder, paying careful attention to the results provided in Table 6,\
+page 183. Answer the following questions:
+
+(a) Describe the time-to-event variable that was investigated in the study, the time metric, and the\
+    beginning of time.\
+    \
+    \
+(b) In the context of the study, describe what it means to “survive” beyond time t.\
+    \
+    \
+(c) Carefully examine Table 6. Interpret the following quantities found in the table in the context of the\
+    study:
+    -   -1.12
+
+    -   -0.75
+
+    -   .33 and the 95% CI (.18, .61)
+
+    -   .48 and the 95% CI (.25, .89)
+(d) In the context of the study, what conclusion did the authors make based on the confidence interval\
+    (.25, .89)?\
+    \
+
+# Problem 4
+
+Read the article “Nonsteroidal anti-inflammatory drug therapy for neonatal calf diarrhea complex: Effects\
+on calf performance” located in the Homework 6 folder. This article is ripe full of incorrect interpretations\
+and conclusions from Cox regression models.
+
+a.  Describe the two time-to-event variables that are examined in this article.\
+    \
+    \
+b.  Examine the second paragraph at the bottom of page 2023, in particular the discussion of the results\
+    of a Cox regression model that was fit to the data. Briefly discuss the incorrect statement made\
+    concerning the hazard ratio 3.19. What should have been the correct interpretation of this value?\
+    \
+    \
+c.  Examine the last paragraph on page 2024. Describe the incorrect interpretation made concerning the\
+    Cox regression model results. Correct the statement.\
+    \
+
+# Problem 5
+
+The UMass Aids Research Unit IMPACT (UIS) Study dataset contains the times until drug relapse\
+for 575 participants, as well as measurements on several other variables (see the end of the assignment for\
+variable descriptions). The data is located in the Homework 6 folder. Import the uissurv data and fit\
+the CR model with HC, AGE, NDRUGTX, and the interaction between HC and AGE. You can use the following\
+syntax with appropriate modifications:
+
+``` r
+cr.object <- coxph(Surv(TIME, CENSOR) ~ as.factor(HC)*AGE+NDRUGTX, data = uissurv)
+cr.object$var
+```
+
+Use the output to answer most of the following questions:
+
+(a) Provide a reasonable sketch of the log hazard profiles that correspond to a scenario where the effect of\
+    age (AGE) on hazard of drug relapse depends on heroin/cocaine use (HC) in months prior to treatment.\
+    Be sure to include all values of HC in your sketch. Assume that number of previous drug treatments\
+    is fixed.\
+    \
+    \
+
+(b) Based on the output, determine if the overall model is significant at the .05 level. State the appropriate\
+    null and alternative hypotheses, report the correct test statistic and p-value, and state a conclusion\
+    in context.\
+    \
+    \
+
+(c) Examine the output from the fitted model and locate the 95% confidence interval (0.91261, 0.9758).\
+    Interpret the interval in context.\
+    \
+    \
+
+(d) Using an appropriate estimated hazard ratio, which individual is at higher risk of relapsing: Indi-\
+    vidual 1 who is 30 years old, has previously used both heroin and cocaine, and has had 1 previous\
+    drug treatment; or Individual 2 who is 25 years old, has previously used heroin only, and has had 5\
+    previous drug treatments. Show your work.\
+    \
+    \
+
+(e) Using an appropriate 95% confidence interval, determine if the risk of relapse is significantly different\
+    for the following two individuals: Individual 1 who is 30 years old, has previously used both heroin\
+    and cocaine, and has had 1 previous drug treatment; or Individual 2 who is 25 years old, has\
+    previously used both heroin and cocaine, and has had 5 previous drug treatments. Show your work.\
+    \
+    \
+
+(f) Fit a reduced model containing only the predictors HC, AGE, and NDRUGTX. At the .05 level, determine\
+    if the interaction between HC and AGE significantly improves the fit of the model with only HC, AGE,\
+    and NDRUGTX. Report the value of the test statistic and p-value, and provide a conclusion.\
+    \
+    \
+
+(g) Fit an alternative model that contains predictors HC, AGE, and BECKTOTA. Using an appropriate test\
+    or other means, determine whether this new alternative model or the reduced model in part (f) fits\
+    the data better. Justify your answer.\
+    \
+    \
+
+(h) Based on the reduced model that was fit in part (f), plot the predictor-adjusted survival curves at\
+    each level of HC for patients who are at the median age of 32 years and who have a median number\
+    of prior drug treatments of 3 using the syntax (include the plot in your assignment):
+
+    ```{r}
+    pred.HC <- data.frame(HC=1:4,AGE=median(uis$AGE),NDRUGTX=median(uis$NDRUGTX))
+    pred.HC$HC <- as.factor(pred.HC$HC)
+    adj.surv.HC <- survfit(cr.object,newdata=pred.HC)
+    plot(adj.surv.HC,lty=1:4,main="Predictor Adjusted Survival Curves",
+    xlab="Days",ylab="Survival Probability")
+    legend(300,.7,c("Heroin & Cocaine","Heroin Only","Cocaine Only","Neither Heroin nor Cocaine"),
+    lty=1:4)
+    ```
+
+    (a) Based on the plot, what do you observe about the drug-relapse experiences for participants who\
+        are 32 years old with 3 prior drug treatments and who had previously used both heroin and cocaine\
+        versus participants (32 years old with 3 prior drug treatments) who had previously used heroin\
+        only?\
+        \
+    (b) Based on the plot, which group (drug-users) tends to have the longest time until relapse?\
+        \
+
+# Variable Descriptions
+
+| Variable | Description | Codes/Values |
+|----|----|----|
+| ID | Identification Code | 1 - 628 |
+| AGE | Age at Enrollment | Years |
+| BECKTOTA | Beck Depression Score | 0 - 54 (higher = more depressed) |
+| HC | Heroin/Cocaine Use | 1 = Heroin & Cocaine, 2 = Heroin Only, 3 = Cocaine Only, 4 = Neither |
+| IVHX | History of IV Drug Use | 1 = Never, 2 = Previous, 3 = Recent |
+| NDRUGTX | Prior Drug Treatments | 0 - 40 |
+| RACE | Subject’s Race | 0 = White, 1 = Non-White |
+| TREAT | Treatment Assignment | 0 = Short, 1 = Long |
+| SITE | Treatment Site | 0 = A, 1 = B |
+| LOS | Length of Stay | Days |
+| TIME | Time to Drug Relapse | Days |
+| CENSOR | Censoring status | 1 = Returned to Drugs, 0 = Censored |

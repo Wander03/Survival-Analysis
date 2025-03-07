@@ -98,7 +98,7 @@ rev(exp(log(HR) %+-% z * SE))
 # Variable Descriptions for UIS Study:
 
 | Variable | Description | Codes/Values |
-|----------------------|------------------------|---------------------------|
+|----|----|----|
 | ID | Identification Code | 1 - 628 |
 | AGE | Age at Enrollment | Years |
 | BECKTOTA | Beck Depression Score | 0.000 - 54.000 (higher scores indicate more depression) |

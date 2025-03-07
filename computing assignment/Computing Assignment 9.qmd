@@ -1,0 +1,184 @@
+---
+title: "Computing Assignment 9: STAT 417 - Survival Analysis Methods"
+author: "Andrew Kerr"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(here)
+library(survival)
+
+Mex.Covid <- read_table(here("data", "Mex.Covid.txt"))
+cocaine <- read_csv(here("data", "cocaine.csv"))
+```
+
+# Covid-19
+
+1.  The Mexico Covid19 data file, Mex.Covid.txt is located in the Computing Assignment 9 folder. The time-to-event variable will be defined as T = time (days) from first symptom of Covid19 until death for those individuals who test positive for SARS-COV2 (the novel coronavirus that causes Covid19). Define the following variables:
+
+-   TTD: Time (in days) from first symptom of COVID-19 until death
+
+-   Censor: Takes the value 1 if the individual experienced death; 0 if the individual did not die by September 27th, 2020)
+
+-   Gender: X1 = 1 if person who tested positive is male and X1 = 0 if person who tested positive is female (Note the difference in the dummy variable definition from Homework 7)
+
+-   Age: X2 = Age (in years) of the person who tested positive
+
+-   Asthma: X3 = 1 if person who tested positive has asthma; 0 if not
+
+-   Obese: X4 = 1 if person who tested positive is obese; 0 if not
+
+Import the data file into your R session. Some individuals have value of "unknown" for one or more of the health indicator variables. To facilitate interpretation of the models, those individuals with "unknown" values for Obese and Asthma need to be removed from the data file. Do this with the syntax:
+
+```{r}
+Mex.Covid <- Mex.Covid[Mex.Covid$Obese!="Unknown",]
+Mex.Covid <- Mex.Covid[Mex.Covid$Asthma!="Unknown",]
+```
+
+(a) Fit the Cox regression model containing the explanatory variables Gender, Age, Asthma, and Obese using the syntax:
+
+```{r}
+Mex.cr.red <-coxph(Surv(TTD,Censor)~as.factor(Gender)+Age+as.factor(Asthma)+
+                     as.factor(Obese), data=Mex.Covid)
+```
+
+You'll use the results of this model stored in Mex.cr.red for a future part of this problem. Now fit the Cox regression model containing the explanatory variables Gender, Age, Asthma, and Obese, as well as the interaction between Gender and Asthma and the interaction between Gender and Obese. Use the syntax:
+
+```{r}
+Mex.cr.full <-coxph(Surv(TTD,Censor)~as.factor(Gender)*as.factor(Asthma)+Age+
+                      as.factor(Gender)*as.factor(Obese), data=Mex.Covid)
+
+summary(Mex.cr.full)
+```
+
+Based on the output, answer the following:
+
+i.  Is there significant evidence that the relationship between hazard of death from Covid19 and obesity status depends on gender, after adjusting for age and asthma status? Answer this question by reporting the appropriate test statistic and p-value and provide a conclusion. Use a .05 level of significance.
+
+    test-statistic: -1.1
+
+    p-value: 0.271
+
+    At the 5% significance level, we can not conclude that the relationship between hazard of death from Covid19 and obesity status depends on gender, after adjusting for age and asthma status.
+
+ii. Is there significant evidence that the relationship between hazard of death from Covid19 and asthma status depends on gender, after adjusting for age and obesity status? Answer this question by reporting the appropriate test statistic and p-value and provide a conclusion. Use a .05 level of significance.
+
+    test-statistic: -4.235
+
+    p-value: \<.0001
+
+    At the 5% significance level, we can conlcude that the relationship between hazard of death from Covid19 and asthma status depends on gender, after adjusting for age and obesity status.
+
+iii. Perform the partial likelihood ratio test to determine whether the model with the interaction terms is a significant improvement over the model without the interactions. Report the test statistic, degrees of freedom, p-value and provide a conclusion. You can use the syntax:
+
+```{r}
+anova(Mex.cr.red,Mex.cr.full)
+```
+
+test-statistic: 19.224
+
+p-value: \<.0001
+
+At any reasonable level of significance, we can conclude that the interactions between gender and asthma status and gender and obesity status substantially improive the goodness-of-fit of the model with age, gender, asthma status, and obesity status.
+
+# Cocaine
+
+2.  Recall the study by Burton et al. (1996) that investigated the age at first use of cocaine among 1658 white males. The file cocaine.txt located in the Computing Assignment 9 folder contains the ages at first use of cocaine, as well as measurements on several other variables. Some of them are described below:
+
+-   birthyr: participants were born within 10 years of each other, so birthyr represents the number of years after the "baseline" year that the first males were born. This is to account for societal changes that may have occurred during the era under study (1961-1985). Individuals with values of birthyr equal to 0 are the oldest. Individuals with values of birthyr equal to 10 are the youngest.
+
+-   Drug_use: a categorical variable indicating whether the individual had ever used marijuana or other drugs (including amphetamines, psychedelics, depressants, opiates, or heroin). The variable is coded as follows:
+
+– 1 = neither marijuana nor any other drug
+
+– 2 = marijuana only
+
+– 3 = other drugs, but not marijuana
+
+– 4 = both marijuana and other drugs
+
+-   rural: a variable indicating whether the male lived in a sub-urban area (rural=1) or urban area (rural=0).
+
+Read the data file into your R session and fit the CR model with birthyr, rural, Drug_use, and the interaction between Drug_use and birthyr, using the following code:
+
+```{r}
+cr.object <- coxph(Surv(cokeage,censor)~rural+as.factor(Drug_use)*birthyr,data=cocaine)
+summary(cr.object)
+```
+
+(a) Determine if the interaction term significantly improves the fit of the model with only birthyr, rural, and Drug_use included. Compute the test statistic and p-value, and state a conclusion. To find the test statistic and p-value, you may use the R function anova() or fit a reduced model, find the evaluated log partial likelihoods for each model, and calculate the test statistic and p-value.
+
+    ```{r}
+    anova(cr.object)
+    ```
+
+    test-statistic: 5.4634
+
+    p-value: 0.1408
+
+    At the 5% level of significance, we do not have evidence that the interaction between drug use and birth year significantly improve the model with only birth year, rural, and drug use.
+
+(b) Compare the fit of the original model (with interaction) to the fit of the reduced model (without the interaction) using the AIC statistics (show your work). Is your answer in agreement to the answer in part (a)? NOTE: for this part, you need to fit a reduced model and find the evaluated log partial likelihoods for each model
+
+    ```{r}
+    cr.reduced.object <- coxph(Surv(cokeage,censor)~rural+as.factor(Drug_use)+birthyr,data=cocaine)
+
+    # AIC(cr.object)
+    # AIC(cr.reduced.object)
+
+    interaction_loglik <- cr.object$loglik[2]
+    reduced_loglik <- cr.reduced.object$loglik[2]
+
+    p_interaction <- length(cr.object$coefficients)
+    p_reduced <- length(cr.reduced.object$coefficients)
+
+    -2 * (rbind(interaction_loglik, reduced_loglik)) + 2 * (rbind(p_interaction, p_reduced))
+    ```
+
+    The fit of the interaction model is slightly worse then the fit of the reduced model since it has a higher AIC value! This agrees with my answer from part (a).
+
+(c) Assess the assumptions of the CR model by investigating various residual plots. First construct residual objects with the following code:
+
+```{r}
+mart <- residuals(cr.object,type="martingale")
+schoen <- residuals(cr.object,type="schoenfeld")
+```
+
+i.  Construct the martingale residual plot for the quantitative predictor birthyr with the following syntax:
+
+    ```{r}
+    plot(cocaine$birthyr, mart,xlab="Years from Baseline",ylab="Martingale Residuals",main="Predictor: birthyr")
+    smooth.sres <- lowess(cocaine$birthyr,mart) 
+    lines(smooth.sres$x,smooth.sres$y,lty=1)
+    ```
+
+What does the plot suggest?
+
+The above plot suggests that the linearity assumption between log hazard and birth year has not been violated since there is no distinct pattern in the plot, and the lowess fit is roughly horizontal.
+
+ii. Construct the Schoenfeld residual plots for predictors rural and birthyrwith the following syn- tax:
+
+```{r}
+par(mfrow=c(1,2)) 
+comp.times <- sort(cocaine[cocaine$censor!=0,]$cokeage) 
+plot(comp.times,schoen[,1],xlab="Time",ylab="Schoenfeld Residuals",
+     main="Predictor: rural") 
+smooth.sres <- lowess(comp.times,schoen[,1]) 
+lines(smooth.sres$x,smooth.sres$y,lty=1) 
+
+plot(comp.times,schoen[,5],xlab="Time",ylab="Schoenfeld Residuals", 
+     main="Predictor: birthyr") 
+smooth.sres <- lowess(comp.times,schoen[,5]) 
+lines(smooth.sres$x,smooth.sres$y,lty=1)
+```
+
+What do the plots suggest about the proportionality assumption for each predictor?
+
+The above plots suggest that the proportionality assumption for rural has not been violated (we see a horizontal lowess line), but that it has been violated for birth year (not a horizontal lowess line).
