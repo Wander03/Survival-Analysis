@@ -195,24 +195,33 @@ Cancer” located in the Homework 6 folder, paying careful attention to the resu
 page 183. Answer the following questions:
 
 (a) Describe the time-to-event variable that was investigated in the study, the time metric, and the\
-    beginning of time.\
-    \
-    \
+    beginning of time.
+
+    T = Amount of time from lung cancer diagnosis to death from lung cancer
+
+    time metric: months
+
+    beginning of time: lung cancer diagnosis
+
 (b) In the context of the study, describe what it means to “survive” beyond time t.\
     \
-    \
+    The patient has not died from lung cancer by the end of the study (March 15, 2006)\
+
 (c) Carefully examine Table 6. Interpret the following quantities found in the table in the context of the\
     study:
-    -   -1.12
 
-    -   -0.75
+    -   -1.12: The log hazard of death from lung cancer for women is 1.12 lower than that for men, regardless of the amount of time since diagnosis.
 
-    -   .33 and the 95% CI (.18, .61)
+    -   -0.75: The log hazard of death from lung cancer for women is 0.75 lower than that for men, holding smoking status, cancer stage, cell type, and resection constant.
 
-    -   .48 and the 95% CI (.25, .89)
+    -   .33 and the 95% CI (.18, .61): The hazard of death from lung cancer for women is estimated to be 67% lower than that for men, regardless of time since diagnosis. We are 95% confidence that the true hazard of death from lung cancer for women is between 82% lower and 39% lower than that for men, regardless of time since diagnosis.
+
+    -   .48 and the 95% CI (.25, .89): The hazard of death from lung cancer for women is estimated to be 52% lower than that for men, holding smoking status, cancer stage, cell type, and resection constant. We are 95% confidence that the true hazard of death from lung cancer for women is between 75% lower and 11% lower than that for men, holding smoking status, cancer stage, cell type, and resection constant.
+
 (d) In the context of the study, what conclusion did the authors make based on the confidence interval\
-    (.25, .89)?\
-    \
+    (.25, .89)?
+
+    The authors concluded that women have a significantly lower risk of dying from lung cancer compared to men, holding smoking status, cancer stage, cell type, and resection constant.
 
 # Problem 4
 
@@ -222,15 +231,22 @@ and conclusions from Cox regression models.
 
 a.  Describe the two time-to-event variables that are examined in this article.\
     \
-    \
+    T = The number of days after developing diarrhea that the calf took to consume at least 100 g of calf starter ration for 2 consecutive days
+
+    T = The number of days to weaning (calf older than 28 days and has consumed at least 750 g/d of calf starter ration for 3 consecutive days)\
+
 b.  Examine the second paragraph at the bottom of page 2023, in particular the discussion of the results\
     of a Cox regression model that was fit to the data. Briefly discuss the incorrect statement made\
     concerning the hazard ratio 3.19. What should have been the correct interpretation of this value?\
     \
-    \
+    The probability of the calf consuming starter ration is not 3.19 times larger, but the risk of calfs consuming starter ration is 219% higher for those in the MEL group compared to the PLA group.\
+
 c.  Examine the last paragraph on page 2024. Describe the incorrect interpretation made concerning the\
     Cox regression model results. Correct the statement.\
     \
+    The authors concluded that calfs in the MEL treatment "ended to reduce time to weaning by 65% compared with PLA-treated animals" for the hazard ration of 1.65 with a p-value of 0.111. The hazard ratio is in increase, not decrease, and this p-value is likely not significant (not 100% sure because they do not say their significance level).\
+    \
+    Correction: Cox proportional hazards regression analysis indicated that MEL treatment tended to increase time to weaning by 65% compared with PLA-treated animals.
 
 # Problem 5
 
@@ -316,7 +332,7 @@ Use the output to answer most of the following questions:
 # Variable Descriptions
 
 | Variable | Description | Codes/Values |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | ID | Identification Code | 1 - 628 |
 | AGE | Age at Enrollment | Years |
 | BECKTOTA | Beck Depression Score | 0 - 54 (higher = more depressed) |
