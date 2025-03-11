@@ -22,6 +22,7 @@ Mex.Covid <- Mex.Covid[Mex.Covid$Obese!="Unknown",]
 Mex.Covid <- Mex.Covid[Mex.Covid$Asthma!="Unknown",]
 
 Rearrest <- read_table(here("data", "Rearrest.txt"))
+uissurv <- read_table(here("data", "uissurv.txt"))
 ```
 
 # Custom Function
@@ -256,7 +257,7 @@ variable descriptions). The data is located in the Homework 6 folder. Import the
 the CR model with HC, AGE, NDRUGTX, and the interaction between HC and AGE. You can use the following\
 syntax with appropriate modifications:
 
-``` r
+```{r}
 cr.object <- coxph(Surv(TIME, CENSOR) ~ as.factor(HC)*AGE+NDRUGTX, data = uissurv)
 cr.object$var
 ```
@@ -266,55 +267,120 @@ Use the output to answer most of the following questions:
 (a) Provide a reasonable sketch of the log hazard profiles that correspond to a scenario where the effect of\
     age (AGE) on hazard of drug relapse depends on heroin/cocaine use (HC) in months prior to treatment.\
     Be sure to include all values of HC in your sketch. Assume that number of previous drug treatments\
-    is fixed.\
-    \
-    \
+    is fixed.
+
+    ```{r}
+    age_seq <- seq(20, 60)
+    log_hazard <- data.frame(
+      age = rep(age_seq, 4),
+      hc = factor(rep(1:4, each = length(age_seq)), labels = c("Heroin & Cocaine", "Heroin Only", "Cocaine Only", "Neither")),
+      log_hazard = c(
+        0.1 * age_seq - 3,  # HC = 1 (Steep increase)
+        0.05 * age_seq - 2.5,  # HC = 2 (Moderate increase)
+        0.03 * age_seq - 2,  # HC = 3 (Slight increase)
+        -0.03 * age_seq + 2  # HC = 4 (Slight decrease)
+      )
+    )
+
+    ggplot(log_hazard, aes(x = age, y = log_hazard, color = hc)) +
+      geom_line() +
+      labs(title = "Hypothetical Log Hazard Profiles",
+           x = "Age",
+           y = "Log Hazard",
+           color = "Heroin/Cocaine Use") +
+      theme_bw()
+    ```
 
 (b) Based on the output, determine if the overall model is significant at the .05 level. State the appropriate\
     null and alternative hypotheses, report the correct test statistic and p-value, and state a conclusion\
-    in context.\
-    \
-    \
+    in context.
+
+    ```{r}
+    summary(cr.object)
+    ```
+
+    -   $H_o: \beta_1 = \beta_2 = \beta_3 = \beta_4 = 0$
+
+    -   $H_a: \text{At least one } \beta_j \ne 0 \text{; j = 1, 2, 3, 4}$
+
+    -   $G_l = 34.71$
+
+    -   p-value = 3e-05
+
+        At the 5% level of significance, we can conclude that hc, age, ndrugtx, and the intereaction between hc and age are jointly significantly useful for predicting the hazard of relapse.
 
 (c) Examine the output from the fitted model and locate the 95% confidence interval (0.91261, 0.9758).\
     Interpret the interval in context.\
     \
-    \
+    We are 95% confident that the true hazard of relapse decreases between 2.42% and 8.739% for each year increase in age of the subject, holding hc and ndrugtx constant.
 
 (d) Using an appropriate estimated hazard ratio, which individual is at higher risk of relapsing: Indi-\
     vidual 1 who is 30 years old, has previously used both heroin and cocaine, and has had 1 previous\
     drug treatment; or Individual 2 who is 25 years old, has previously used heroin only, and has had 5\
-    previous drug treatments. Show your work.\
-    \
-    \
+    previous drug treatments. Show your work.
+
+    ```{r}
+    # new_data <- data.frame(HC = c(1, 2), AGE = c(30, 25), NDRUGTX = c(1, 5))
+    # coefs <- predict(cr.object, newdata = new_data, type = "terms")
+    # 
+    # coefs
+    # 
+    # exp(sum(coefs[1,]) - sum(coefs[2,]))
+
+    exp(-0.057989 * 30 + 0.031243 * 1) / exp(-0.057989 * 25 - 1.373104 + 0.031243 * 5 + 0.0437 * 25)
+    ```
+
+    Individual 1 is at higher risk of relapsing since the estimated HR is less than 1.
 
 (e) Using an appropriate 95% confidence interval, determine if the risk of relapse is significantly different\
     for the following two individuals: Individual 1 who is 30 years old, has previously used both heroin\
     and cocaine, and has had 1 previous drug treatment; or Individual 2 who is 25 years old, has\
-    previously used both heroin and cocaine, and has had 5 previous drug treatments. Show your work.\
-    \
-    \
+    previously used both heroin and cocaine, and has had 5 previous drug treatments. Show your work.
+
+    ```{r}
+    CI(4, 5, 30-25, 1-5, 1.96, cr.object)
+    ```
+
+    See function at beginning of HW for work!
+
+    The risk is not significantly different for the two individuals because 1 is within the CI.
 
 (f) Fit a reduced model containing only the predictors HC, AGE, and NDRUGTX. At the .05 level, determine\
     if the interaction between HC and AGE significantly improves the fit of the model with only HC, AGE,\
-    and NDRUGTX. Report the value of the test statistic and p-value, and provide a conclusion.\
-    \
-    \
+    and NDRUGTX. Report the value of the test statistic and p-value, and provide a conclusion.
+
+    ```{r}
+    cr.object.reduced <- coxph(Surv(TIME, CENSOR) ~ as.factor(HC)+AGE+NDRUGTX, data = uissurv)
+
+    anova(cr.object, cr.object.reduced)
+    ```
+
+    -   $G_l = 6.6346$
+
+    -   p-value = 0.0845
+
+        At the 5% level of significance, we can not conclude that the interaction between age and hc significantly improves the goodness-of-fit of the model containing age, hc, and ndrugtx.
 
 (g) Fit an alternative model that contains predictors HC, AGE, and BECKTOTA. Using an appropriate test\
     or other means, determine whether this new alternative model or the reduced model in part (f) fits\
-    the data better. Justify your answer.\
-    \
-    \
+    the data better. Justify your answer.
+
+    ```{r}
+    cr.object.alt <- coxph(Surv(TIME, CENSOR) ~ as.factor(HC)+AGE+BECKTOTA, data = uissurv)
+
+    AIC(cr.object.alt, cr.object.reduced)
+    ```
+
+    The reduced model from part (f) is a better fit to the data than the alternative model because the reduced model has a smaller AIC value.
 
 (h) Based on the reduced model that was fit in part (f), plot the predictor-adjusted survival curves at\
     each level of HC for patients who are at the median age of 32 years and who have a median number\
     of prior drug treatments of 3 using the syntax (include the plot in your assignment):
 
     ```{r}
-    pred.HC <- data.frame(HC=1:4,AGE=median(uis$AGE),NDRUGTX=median(uis$NDRUGTX))
+    pred.HC <- data.frame(HC=1:4,AGE=median(uissurv$AGE),NDRUGTX=median(uissurv$NDRUGTX))
     pred.HC$HC <- as.factor(pred.HC$HC)
-    adj.surv.HC <- survfit(cr.object,newdata=pred.HC)
+    adj.surv.HC <- survfit(cr.object.reduced,newdata=pred.HC)
     plot(adj.surv.HC,lty=1:4,main="Predictor Adjusted Survival Curves",
     xlab="Days",ylab="Survival Probability")
     legend(300,.7,c("Heroin & Cocaine","Heroin Only","Cocaine Only","Neither Heroin nor Cocaine"),
@@ -324,10 +390,13 @@ Use the output to answer most of the following questions:
     (a) Based on the plot, what do you observe about the drug-relapse experiences for participants who\
         are 32 years old with 3 prior drug treatments and who had previously used both heroin and cocaine\
         versus participants (32 years old with 3 prior drug treatments) who had previously used heroin\
-        only?\
-        \
-    (b) Based on the plot, which group (drug-users) tends to have the longest time until relapse?\
-        \
+        only?
+
+        The survival of individuals who used both heroin and cocaine is slightly greater than the survival of individuals who only used heroin for all time t.
+
+    (b) Based on the plot, which group (drug-users) tends to have the longest time until relapse?
+
+        Individuals who only used cocaine tended to have the longest time until relapse since this group has the highest survival probability at all time t.
 
 # Variable Descriptions
 
