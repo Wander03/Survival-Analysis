@@ -1,0 +1,138 @@
+---
+title: "Computing Assignment 10: STAT 417 - Survival Analysis Methods"
+author: "Andrew Kerr"
+format: html
+editor: visual
+embed-resources: true
+---
+
+In this assignment, you’ll examine attendance data from Winter 2025 to investigate the time until first absence. The file `AttendanceW2025.txt` located in the Computing Assignment Week 10 folder contains the time (number of days) until first absence (measured from the student’s first day of class), as well as measurements on two explanatory variables described below:
+
+-   **Time**: Time until first absence (days).
+-   **C**: Censoring status variable. $1 =$ time is complete, $0 =$ student still has not been absent.
+-   **Gender**: The self-identified gender of the student: female or male (the reference group will be female students when the model is fit).
+-   **STATMajor**: Whether the student is a Statistics major: yes or no (the reference group will be "No" when the model is fit).
+
+```{r}
+#| include: false
+
+library(tidyverse)
+library(here)
+library(survival)
+library(dipsaus)
+
+AttendanceW2025 <- read_table(here("data", "AttendanceW2025.txt"))
+
+AttendanceW2025 <- AttendanceW2025 %>%
+  select(-X5)
+```
+
+## Question 1
+
+Import the data into your R session and examine the Kaplan-Meier curves using the following syntax:
+
+```{r}
+KM.obj <- survfit(Surv(Time,C)~Gender,conf.type="none", data=AttendanceW2025)
+
+plot(KM.obj,lty=1:2,xlab="Days until First Absence", ylab="Survival Probability",
+
+main="KM Curves for Male and Female Students")
+
+legend(10,.3, c("Males","Females"),lty=2:1)
+```
+
+What do you observe?
+
+The survival probability for female students is greater than that for male students for all time t, meaning that female students tend to take a longer amount of time until first absence than male students. Additionally, both survival curves end with a survival probability of around 0.6, which means that roughly 60% of the male and female students were never absent this quarter!
+
+## Question 2
+
+Fit the exponential regression model that includes the predictors Gender and STATMajor. Use the following syntax to guide you:
+
+```{r}
+exp.obj <- survreg(
+  Surv(Time,C)~Gender+STATMajor, 
+  data=AttendanceW2025, 
+  dist="exponential"
+  )
+
+summary(exp.obj)
+```
+
+Based on the summary of results of the fitted model, answer the following:
+
+(a) Estimate how much higher or lower (as a percentage change) the time until first absence is for a Statistics major compared to a non-Statistics major adjusting for gender.
+
+    The time until first absence for statistics majors is estimated to be 19.6% longer than the times to first absence for non-statistics majors.
+
+(b) Predict the median time until first absence for a male student who is not a Statistics major.
+
+    ```{r}
+    cat("median:", -log(.5) * exp(3.401 - 0.253), "days")
+    ```
+
+(c) Write out the expressions for the estimated predictor-adjusted survival function and hazard function using the parameter estimates of your model.
+
+    $$
+    S(t|X_1, X_2) = exp[\frac{-t}{exp(3.401 - 0.253x_1 + 0.179x_2)}]
+    $$
+
+    $$
+    h(t|X_1, X_2) = \frac{1}{exp(3.401 - 0.253x_1 + 0.179x_2)}
+    $$
+
+(d) Is either explanatory variable significantly useful in the presence of the other? Justify your answer.
+
+    Neither explanatory variable is significantly useful because the Wald test results is large p-values for both predictors (0.63 and 0.87 respectively).
+
+(e) Compute the estimated mean time to first absence for a female student who is a Statistics major.
+
+    ```{r}
+    cat("mean time:", exp(3.401 + 0.179), "days")
+    ```
+
+(f) Compute and interpret the estimated time ratio comparing male students who are not Statistics majors to male students who are Statistics majors.
+
+    ```{r}
+    cat("est. TR:", exp(-0.179))
+    ```
+
+    The estimated time to first absence for male students that are not statistics majors is 16.39% faster than that for male students that are statistics majors.
+
+(g) Compute the estimated hazard ratio comparing male students who are not Statistics majors to male students who are Statistics majors.
+
+    ```{r}
+    cat("est. HR:", exp(0.179))
+    ```
+
+(h) Construct a 95% confidence interval for the hazard ratio that you estimated above.
+
+    ```{r}
+    exp(-(0.179 %+-% 1.96 * 1.061))
+    ```
+
+## Question 3
+
+Fit a Weibull regression model that includes the predictors Gender and STATMajor. The syntax will be similar to that used for the exponential regression model, but specify `dist="weibull"` in the `survreg` statement. Based on the summary of results of the fitted model, answer the following:
+
+```{r}
+weibull.obj <- survreg(
+  Surv(Time,C)~Gender+STATMajor, 
+  data=AttendanceW2025, 
+  dist="weibull"
+  )
+
+summary(weibull.obj)
+```
+
+(a) Predict the median time until first absence for a male student who is not a Statistics major. How does your answer compare to that obtained using the exponential regression model in Problem 1(d)?
+
+    ```{r}
+    cat("median:", (-log(.5))**0.841 * exp(3.294 - 0.219), "days")
+    ```
+
+    This is smaller compared to my answer using the exponential distribution (16.14301 days).
+
+(b) Perform the appropriate test at the $0.1$ significance level to determine if the Weibull model is more appropriate to use than the exponential model. Justify your answer.
+
+    With a test-statistic = -0.75 and a p-value = 0.45476, at the 0.1 significance level we can not conclude that the Weibull regression model is a significant improvement over the Exponential regression model.
