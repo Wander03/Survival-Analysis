@@ -1,0 +1,256 @@
+---
+title: "Homework 7: STAT 417 - Survival Analysis Methods"
+author: "Andrew Kerr"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| include: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(here)
+library(survival)
+
+cocaine <- read_csv(here("data", "cocaine.csv"))
+Mex.Covid <- read_table(here("data", "Mex.Covid_HW6.txt"))
+```
+
+## Problem 1
+
+Recall the study by Burton et al. (1996) that investigated the age at first use of cocaine among 1658 white males. The file `cocaine.txt` located in the Homework 7 folder contains the ages at first use of cocaine, as well as measurements on several other variables. Some of them are described below:
+
+-   **birthyr**: Participants were born within 10 years of each other, so birthyr represents the number of years after the "baseline" year that the first males were born. This is to account for societal changes that may have occurred during the era under study (1961-1985). Individuals with values of birthyr equal to 0 are the oldest. Individuals with values of birthyr equal to 10 are the youngest.
+
+-   **Drug_use**: A categorical variable indicating whether the individual had ever used marijuana or other drugs (including amphetamines, psychedelics, depressants, opiates, or heroin). The variable is coded as follows:
+
+    -   1 = neither marijuana nor any other drug
+    -   2 = marijuana only
+    -   3 = other drugs, but not marijuana
+    -   4 = both marijuana and other drugs
+
+-   **rural**: A variable indicating whether the male lived in a sub-urban area (`rural=1`) or urban area (`rural=0`).
+
+    ```{r}
+    cr.object <- coxph(Surv(cokeage,censor) ~ birthyr + as.factor(rural), data=cocaine)
+    ```
+
+### (a)
+
+Fit a Cox regression model that includes `birthyr` and `rural`. Name the Cox regression object `cr.object`. Perform a formal test of proportionality using the syntax:
+
+```{r}
+cox.zph(cr.object)
+```
+
+What conclusions can you draw from the test?
+
+The proportionality assumption has been violated for birth year, but not for rural.
+
+### (b)
+
+Fit a stratified Cox regression model that includes `birthyr` and the stratification variable `rural`. Use the syntax on page 144 of the Workbook as a guide, and name the Cox regression object `cr.object`. Interpret the estimated coefficient corresponding to `birthyr`.
+
+```{r}
+cr.object <- coxph(Surv(cokeage,censor) ~ birthyr + strata(rural), data=cocaine)
+summary(cr.object)
+```
+
+Adjusting for rural, the hazard of first using cocaine is estimated to increase by 22.295% for each 1-year increase in birthyr.
+
+### (c)
+
+Construct the estimated predictor-adjusted survival curves for the Urban and Suburban strata at the median value of `birthyr` (within each stratum). Use the following syntax:
+
+```{r}
+# Plot Est Pred-Adj Surv Curve for Rural = 0 (urban) with median birthyr = 6
+pred.vals <- data.frame(birthyr=6,data=cocaine)
+fit <- survfit(cr.object,newdata=pred.vals)
+plot(fit[1]$time, fit[1]$surv, type="s",lty=1, xlab="Age at First-Use of Cocaine",
+ylab="Estimated Survival Probability",ylim=c(0,1),
+main="Estimated Stratified Predictor-Adjusted Survival Curves")
+
+# Superimpose Plot of Est Pred-Adj Surv Curve for Rural = 1 (suburban) with median birthyr = 5
+pred.vals <- data.frame(birthyr=5,data=cocaine)
+fit <- survfit(cr.object,newdata=pred.vals)
+lines(fit[2]$time,fit[2]$surv,type="s",lty=2)
+legend(20,.8,c("Urban","Suburban"),lty=1:2)
+```
+
+Examine the plots and comment on the estimated "survival" probabilities (in context) of the two groups. Does the effect of where the male lived on hazard of first cocaine use appear to depend on time? Briefly explain.
+
+The survival probabilities of those that lived in a suburban setting decreases at a faster rate than those that lived in an urban setting for all time t. We can conclude this since the distance between survival curves increases over time, so yes, the effect of where the males lived on hazard of first cocain use appears to depend on time.
+
+## Problem 2
+
+The Mexico Covid19 data file, `Mex.Covid.txt` is located in the Homework 7 folder. The time-to-event variable will be defined as:
+
+$$ T = \text{time (days) from first symptom of Covid19 until death} $$
+
+for those individuals who test positive for SARS-COV2 (the novel coronavirus that causes Covid19). Suppose it is of interest to predict the (log) time to death from Covid19 with an exponential regression model using the predictors `Gender` and `Age`. Read the data file into your R session and remove all times that are equal to 0 days (or else the AFT models can't be fit). Fit the exponential regression model:
+
+```{r}
+Mex.Covid2 <- Mex.Covid[Mex.Covid$TTD!=0,]
+exp.obj <- survreg(Surv(TTD,Censor)~Gender+Age, data=Mex.Covid2, dist="exponential")
+summary(exp.obj)
+```
+
+Answer the following:
+
+### (a)
+
+Estimate how much higher or lower the (predicted) time until death from Covid19 is for a male aged 45 years compared to a female aged 50 years. Express your answer as a percent and indicate higher or lower in your answer.
+
+```{r}
+exp(-0.473408 + 5*0.069878)
+```
+
+The estimated time until death from Covid19 for a 45 year old male who tested positive for SARS-COV2 is 11.66% shorter than that for a 50 year old female who tested positive for SARS-COV2.
+
+### (b)
+
+Predict the median time until death for a female aged 60 years.
+
+```{r}
+cat(-log(.5) * exp(10.471053 - 60*0.069878), "days")
+```
+
+### (c)
+
+Estimate mean time until death for a female aged 60 years.
+
+```{r}
+cat(exp(10.471053 - 60*0.069878), "days")
+```
+
+### (d)
+
+Write out the expressions for the estimated predictor-adjusted survival function, hazard function, and cumulative hazard function using the parameter estimates of your model.
+
+$$
+S(t|X_1, X_2) = exp[\frac{-t}{exp(10.47 - 0.47x_1 - 0.07x_2)}]
+$$
+
+$$
+h(t|X_1, X_2) = \frac{1}{exp(10.47 - 0.47x_1 - 0.07x_2)}
+$$
+
+$$
+H(t|X_1, X_2) = \frac{t}{exp(10.47 - 0.47x_1 - 0.07x_2)}
+$$
+
+### (e)
+
+Using your estimated predictor-adjusted survival function, estimate the probability that a male aged 60 survives longer than 10 days after exhibiting his first symptom.
+
+```{r}
+cat("S(10|X_1 = 1, X_2 = 60) =", 
+    exp(-10 / exp(10.471053 - 0.473408 - 60*0.069878))
+    )
+```
+
+### (f)
+
+Compute and interpret the estimated time ratio comparing males who are 50 years old to females who are 40 years old.
+
+```{r}
+exp(-0.473408 + 10*0.069878)
+```
+
+The estimated time until death from Covid19 for a 50 year old male who tested positive for SARS-COV2 is 25.28% faster than it is for a 40 year old female who tested positive for SARS-COV2.
+
+### (g)
+
+Compute and interpret the estimated hazard ratio comparing males who are 50 years old to females who are 50 years old.
+
+```{r}
+1 / exp(-0.473408)
+```
+
+The estimated hazard of death from Covid19 for a 50 year old male who tested positive for SARS-COV2 is 60.55% higher than it is for a 50 year old female who tested positive for SARS-COV2.
+
+### (h)
+
+Briefly assess the significance of each predictor using the Wald tests. Report the test statistic and p-value and provide a conclusion.
+
+gender:
+
+-   Z = -62.5
+
+-   p-value: \<.001
+
+-   At any reasonable level of significance, we can conclude that gender is a significantly useful predictor for tome to death from Covid19.
+
+age:
+
+-   Z = -321.6
+
+-   p-value: \<.001
+
+-   At any reasonable level of significance, we can conclude that age is a significantly useful predictor for tome to death from Covid19.
+
+### (i)
+
+The chi-square goodness-of-fit statistic is 108346.7 with a p-value \< .001. This indicates that the overall model is significant. Try at least two other models and report their predictor(s) and goodness-of-fit statistics.
+
+```{r}
+exp.obj.2 <- survreg(Surv(TTD,Censor)~Gender*Asthma, data=Mex.Covid2, dist="exponential")
+summary(exp.obj.2)
+
+exp.obj.3 <- survreg(Surv(TTD,Censor)~Obese+Asthma, data=Mex.Covid2, dist="exponential")
+summary(exp.obj.3)
+```
+
+Model 2:
+
+-   Gender, Asthma, and the interaction between the two
+
+-   goodness-of-fit statistic = 38180.41
+
+Model 3:
+
+-   Obese, Asthma
+
+-   goodness-of-fit statistic: 6697.25
+
+## Problem 3
+
+Fit a Weibull regression model that includes the predictors `Gender` and `Age`:
+
+```{r}
+weibull.obj <- survreg(Surv(TTD,Censor)~Gender+Age, data=Mex.Covid2, dist="weibull")
+summary(weibull.obj)
+```
+
+### (a)
+
+Predict the median time until death for a female aged 60 years. Compare with the exponential model result in Problem 2(b).
+
+```{r}
+cat((-log(.5))**1.81 * exp(15.106745 - 60*0.120658), "days")
+```
+
+Compared to the exponential model (369.3926 days), this median is much larger.
+
+### (b)
+
+Compute and interpret the estimated hazard ratio comparing males who are 50 years old to females who are 40 years old.
+
+```{r}
+1 / (exp(-0.834708 + 10*0.120658)) ** (1/1.81)
+```
+
+The estimated hazard of death from Covid19 for a 50 year old male who tested positive for SARS-COV2 is 18.57% lower than it is for a 40 year old female who tested positive for SARS-COV2.
+
+### (c)
+
+Perform the appropriate test at the 0.05 level to determine if the Weibull model is more appropriate than the exponential model. Justify your answer.
+
+Z = 179.1
+
+p-value: \<.001
+
+We can conclude that the Weibull regression model is a significant improvement over the Exponential regression model.
